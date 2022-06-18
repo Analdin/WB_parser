@@ -1,1 +1,1 @@
-WB_parser
+Simple disount parser
