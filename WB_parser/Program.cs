@@ -5,18 +5,19 @@ using System.Text.RegularExpressions;
 using WB_parser.Parsing.AllPages;
 using AngleSharp.Html.Parser;
 using WB_parser.Color;
+using WB_parser.Variable;
 
 namespace MainJob
 {
     public class Program
     {
         public static bool statusOfLogin { get; set; } = false;
-        public static DateTime timeStart { get; set; }
-        public static DateTime timeEnd { get; set;}
+        public static string timeStart { get; set; }
+        public static string timeEnd { get; set;}
 
         static void Main(string[] args)
         {
-            string[] menuItems = new string[] { "Логин", "Парсинг", "Период", "Выход" };
+            string[] menuItems = new string[] { "Логин", "Парсинг", "Категория: выбор", "Подкатегория: выбор", "Цена: выбор", "Уровень скидки", "Период", "Выход" };
 
             Console.WriteLine("Меню");
             Console.WriteLine();
@@ -101,9 +102,27 @@ namespace MainJob
                                     ConsoleColors.DrawColor("Cyan", $"Отменяем парсинг..");
                                     goto default;
                                 }
-
-                                break;
                             case 2:
+                                ConsoleColors.DrawColor("Cyan", $"Введите категорию товара..");
+                                Variables.category = Console.ReadLine();
+                                ConsoleColors.DrawColor("DarkGray", $"Записана категория: {Variables.category}");
+
+                                Thread.Sleep(500);
+
+                                goto case 3;
+                            case 3:
+                                ConsoleColors.DrawColor("Cyan", $"Выберите подкатегорию товара..");
+                                Variables.subCategory = Console.ReadLine();
+                                ConsoleColors.DrawColor("DarkGray", $"Записана подкатегория: {Variables.subCategory}");
+
+                                goto case 4;
+                            case 4:
+                                ConsoleColors.DrawColor("Cyan", $"Выберите диапазон цены товара (пример 1500 - 4500)..");
+                                Variables.priceChoose = Console.ReadLine();
+                                ConsoleColors.DrawColor("DarkGray", $"Выбран диапазон цен: {Variables.priceChoose}");
+
+                                goto case 5;
+                            case 5:
                                 ConsoleColors.DrawColor("Cyan", $"Выберите период за который нужно собрать скидки. (Пример: 01.06.22 - 12.06.22)");
 
                                 ConsoleColors.DrawColor("Cyan", $"Проверяем логин и пароль для входа..");
@@ -111,6 +130,43 @@ namespace MainJob
                                 if (statusOfLogin)
                                 {
                                     ConsoleColors.DrawColor("Green", $"Пароль и логин - верные, устанавливаем дату для парсинга..");
+
+                                    ConsoleColors.DrawColor("DarkGray", $"Введите начальную дату.");
+                                    timeStart = Console.ReadLine();
+
+                                    if(timeStart.Length > 10)
+                                    {
+                                        ConsoleColors.DrawColor("Red", $"Введите верный формат начальной даты (пример: 01.06.2022)");
+                                    }
+                                    else
+                                    {
+                                        ConsoleColors.DrawColor("DarkGray", $"Записана начальная дата: {timeStart}");
+                                    }
+
+                                    ConsoleColors.DrawColor("DarkGray", $"Введите конечную дату.");
+                                    timeEnd = Console.ReadLine();
+
+                                    if (timeEnd.Length > 10)
+                                    {
+                                        ConsoleColors.DrawColor("Red", $"Введите верный формат конечной даты (пример: 01.06.2022)");
+                                    }
+                                    else
+                                    {
+                                        ConsoleColors.DrawColor("DarkGray", $"Записана начальная дата: {timeEnd}");
+                                    }
+
+                                    ConsoleColors.DrawColor("Green", $"Установите размер скидки, если не нужно, нажмите Enter. (Устанавливается без знака '%')");
+                                    Variables.discountSet = Console.ReadLine();
+                                    if(String.IsNullOrWhiteSpace(Variables.discountSet))
+                                    {
+                                        ConsoleColors.DrawColor("DarkGray", $"Установка скидки пропущена: {Variables.discountSet}");
+                                        goto case 1;
+                                    }
+                                    else
+                                    {
+                                        ConsoleColors.DrawColor("DarkGray", $"Установлена скидка: {Variables.discountSet}");
+                                        goto case 1;
+                                    }
                                 }
                                 else
                                 {
@@ -119,7 +175,7 @@ namespace MainJob
                                 }
 
                                 break;
-                            case 3:
+                            case 6:
                                 ConsoleColors.DrawColor("Cyan", $"Выбран выход из приложения");
                                 return;
                             default:

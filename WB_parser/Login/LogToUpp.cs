@@ -18,6 +18,8 @@ namespace WB_parser.Login
                 if (attempts.UserPassed())
                 {
                     ConsoleColors.DrawColor("Green", $"Успешный вход! Работаем..");
+                    Thread.Sleep(500);
+                    Console.Clear();
                 }
                 else
                 {

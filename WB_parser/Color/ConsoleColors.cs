@@ -10,7 +10,7 @@ namespace WB_parser.Color
     {
         public static void DrawColor(string name, string message)
         {
-            if(name == null)
+            if(name == "")
             {
                 Console.ResetColor();
             }
@@ -26,9 +26,9 @@ namespace WB_parser.Color
                 Console.WriteLine(message);
                 Console.ResetColor();
             }
-            else if(name == "Red")
+            else if(name == "DarkGray")
             {
-                Console.ForegroundColor = ConsoleColor.Red;
+                Console.ForegroundColor = ConsoleColor.DarkGray;
                 Console.WriteLine(message);
                 Console.ResetColor();
             }
