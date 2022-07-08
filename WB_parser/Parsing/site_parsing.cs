@@ -14,6 +14,9 @@ namespace WB_parser.Parsing
             _address = address;
         }
 
+        /// <summary>
+        /// Запрос к странице
+        /// </summary>
         public void Run()
         {
             _request = (HttpWebRequest)HttpWebRequest.Create(_address);

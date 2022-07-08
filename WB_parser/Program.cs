@@ -17,6 +17,7 @@ namespace MainJob
 
         static void Main(string[] args)
         {
+
             string[] menuItems = new string[] { "Логин", "Парсинг", "Категория: выбор", "Подкатегория: выбор", "Цена: выбор", "Уровень скидки", "Период", "Выход" };
 
             Console.WriteLine("Меню");
@@ -176,6 +177,9 @@ namespace MainJob
 
                                 break;
                             case 6:
+                                ConsoleColors.DrawColor("Cyan", $"Установка периода");
+                                return;
+                            case 7:
                                 ConsoleColors.DrawColor("Cyan", $"Выбран выход из приложения");
                                 return;
                             default:

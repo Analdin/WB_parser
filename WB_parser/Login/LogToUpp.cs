@@ -13,6 +13,9 @@ namespace WB_parser.Login
                 this.attempts = attempts;
             }
 
+            /// <summary>
+            /// Вывод сообщения в консоль
+            /// </summary>
             internal void Say()
             {
                 if (attempts.UserPassed())
@@ -40,6 +43,10 @@ namespace WB_parser.Login
                 this.count = count;
             }
 
+            /// <summary>
+            /// Получение пароля и проверка на корректность
+            /// </summary>
+            /// <returns>Вывод результата</returns>
             public bool UserPassed()
             {
                 var result = false;
@@ -63,6 +70,10 @@ namespace WB_parser.Login
                 this.diff = diff;
             }
 
+            /// <summary>
+            /// Проверка - верный пароль или нет
+            /// </summary>
+            /// <returns>Возвращает результат</returns>
             public bool IsAttemptCorrect()
             {
                 var result = diff.IsInputCorrect();
@@ -90,6 +101,10 @@ namespace WB_parser.Login
                 this.input = input;
             }
 
+            /// <summary>
+            /// Проверка корректности ввода
+            /// </summary>
+            /// <returns>Возвращает результат проверки</returns>
             public bool IsInputCorrect()
             {
                 var userInput = input.GetUserInput();
@@ -104,6 +119,10 @@ namespace WB_parser.Login
             public Password()
             { }
 
+            /// <summary>
+            /// Получаем пароль
+            /// </summary>
+            /// <returns>Возвращаем тот пароль, который надо ввести для успешного входа</returns>
             public string GetPassword()
             {
                 return "777";
@@ -115,6 +134,10 @@ namespace WB_parser.Login
             public Input()
             { }
 
+            /// <summary>
+            /// Получаем то, что ввел пользователь
+            /// </summary>
+            /// <returns>Возвращаем результат</returns>
             public string GetUserInput()
             {
                 ConsoleColors.DrawColor("Cyan", $"Ваш пароль: ");

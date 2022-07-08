@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using OfficeOpenXml;
+﻿using OfficeOpenXml;
 using WB_parser.Color;
 using WB_parser.Variable;
 
@@ -11,11 +6,21 @@ namespace WB_parser.ExcelJob
 {
     public class JobWithExcel
     {
+        /// <summary>
+        /// Метод для работа с Excel таблицей
+        /// </summary>
+        /// <param name="sheetNum">Номер страницы</param>
+        /// <param name="sheetName">Имя страницы</param>
+        /// <param name="docToOpen">Документ который нужно открыть</param>
+        /// <param name="path">Путь к документу</param>
+        /// <param name="cellData">Что записывать</param>
         public static void ExcJob(int sheetNum, string sheetName, string docToOpen, string path, string cellData)
         {
             FileInfo excTable = new FileInfo(path + @"\" + DateTime.Now + ".xlsx");
 
+
             Variables.rowData = cellData;
+
             if(String.IsNullOrWhiteSpace(cellData))
             {
                 ConsoleColors.DrawColor("Red", $"Что-то должно быть записано в cellData... Сейчас она пуста.");

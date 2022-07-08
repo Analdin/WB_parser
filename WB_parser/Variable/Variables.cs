@@ -14,4 +14,11 @@ namespace WB_parser.Variable
         public static string discountSet { get; set; }
         public static string rowData { get; set; }
     }
+
+    public class VariablesForReport
+    {
+        public static string tovName { get; set; }
+        public static string tovPriceWithDiscount { get; set; }
+        public static string tovPriceWithoutDiscount { get; set; }
+    }
 }

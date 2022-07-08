@@ -8,6 +8,11 @@ namespace WB_parser.Color
 {
     public class ConsoleColors
     {
+        /// <summary>
+        /// Простой вызов цветов. 
+        /// </summary>
+        /// <param name="name">Имя цвета - "Red","Green" и т.д.</param>
+        /// <param name="message">Текст сообщения</param>
         public static void DrawColor(string name, string message)
         {
             if(name == "")

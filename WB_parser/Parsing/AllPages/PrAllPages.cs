@@ -7,8 +7,8 @@ namespace WB_parser.Parsing.AllPages
 {
     public class HtmlCodeGet
     {
-        string _url;
-        string _path;
+        string _url; // _primer - приватные переменные в классе
+        string _path; // primer - локальная переменная в методах
 
         public HtmlCodeGet(string url, string path)
         {
@@ -16,13 +16,18 @@ namespace WB_parser.Parsing.AllPages
             _path = path;
         }
 
+        /// <summary>
+        /// Работа парсера, в конце запись полученных данных в таблицу
+        /// </summary>
         public async void ParserRun()
         {
             try
             {
+                List<string> allLinks = new List<string>();
+                List<string> linksLst = new List<string>();
+
                 // -- Заходим на главную сайта, парсим все ссылки с нее --
-                _path = @"C:\Клиентам\Константин_wb\allUrls.txt";
-                string path2 = @"C:\Клиентам\Константин_wb\allUrls1.txt";
+                _path = Directory.GetCurrentDirectory() + @"\Urls\allUrls.txt";
 
                 var parser = new HtmlParser();
                 var config = Configuration.Default.WithDefaultLoader();
@@ -41,37 +46,80 @@ namespace WB_parser.Parsing.AllPages
                     using (StreamWriter write = new StreamWriter(_path, true, System.Text.Encoding.UTF8))
                     {
                         await write.WriteAsync(neededLink + "\n");
-                        write.Close();
                     }
                 }
 
                 // -- Конец парсинга главной --
 
+                using(FileStream fs = new FileStream(_path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
+                {
+                    using (StreamReader reader = new StreamReader(fs))
+                    {
+                        IDocument subDoc;
+                        string? line;
+
+                        while ((line = await reader.ReadLineAsync()) != null)
+                        {
+                            ConsoleColors.DrawColor("Green", $"Читаем строку: {line}");
+
+                            if (!line.Contains("wildberries"))
+                            {
+                                subDoc = await context.OpenAsync("https://www.wildberries.ru/" + line);
+                                IHtmlCollection<IElement> cells1 = subDoc.QuerySelectorAll("a");
+
+                                foreach (var link in cells1)
+                                {
+                                    var subLink = link.GetAttribute("href").ToString();
+                                    ConsoleColors.DrawColor("Cyan", $"Пишем sub ссылку: {subLink}");
+
+                                    allLinks.Add(subLink + "\n");
+                                }
+                            }
+                            else if (line.Contains("vsemrabota") | line.Contains("seller") | line.Contains("travel") | line.Contains("t.me") | line.Contains("play.google.com")
+                                | line.Contains("apps.apple.com") | line.Contains("appgallery8") | line.Contains("vk.com") | line.Contains("odnoklassniki")
+                                | line.Contains("youtube") | line.Contains("wbdevs"))
+                            {
+                                ConsoleColors.DrawColor("Cyan", $"Пропуск строки: {line}");
+                            }
+                        }
+                    }
+                }
+
+                linksLst = allLinks.Distinct().ToList();
+
+                // Записываем все в файл
+                using (StreamWriter toFile = new StreamWriter(_path))
+                {
+                    foreach (var link in linksLst)
+                    {
+                        toFile.Write(link);
+                        ConsoleColors.DrawColor("DarkGray", $"Записываем в файл строку: {link}");
+                    }
+                }
+
+                allLinks.Clear();
+
                 //читаем файл со ссылками, парсим href с получившихся ссылок с главной
-                using (StreamReader reader = new StreamReader(path2))
+                using (StreamReader file = new StreamReader(_path))
                 {
                     IDocument subDoc;
                     string? line;
 
-                    while ((line = await reader.ReadLineAsync()) != null)
+                    while ((line = await file.ReadLineAsync()) != null)
                     {
                         ConsoleColors.DrawColor("Green", $"Читаем строку: {line}");
 
                         if (!line.Contains("wildberries"))
                         {
                             subDoc = await context.OpenAsync("https://www.wildberries.ru/" + line);
-                            IHtmlCollection<IElement> cells1 = document.QuerySelectorAll("a");
+                            IHtmlCollection<IElement> cells1 = subDoc.QuerySelectorAll("a");
 
-                            foreach(var link in cells1)
+                            foreach (var link in cells1)
                             {
                                 var subLink = link.GetAttribute("href").ToString();
                                 ConsoleColors.DrawColor("Cyan", $"Пишем sub ссылку: {subLink}");
 
-                                using (StreamWriter write = new StreamWriter(_path, true, System.Text.Encoding.UTF8))
-                                {
-                                    await write.WriteAsync(subLink + "\n");
-                                    write.Close();
-                                }
+                                allLinks.Add(subLink + "\n");
                             }
                         }
                         else if (line.Contains("vsemrabota") | line.Contains("seller") | line.Contains("travel") | line.Contains("t.me") | line.Contains("play.google.com")
@@ -80,25 +128,19 @@ namespace WB_parser.Parsing.AllPages
                         {
                             ConsoleColors.DrawColor("Cyan", $"Пропуск строки: {line}");
                         }
-                        else
-                        {
-                            subDoc = await context.OpenAsync(line);
-                            IHtmlCollection<IElement> cells2 = document.QuerySelectorAll("a");
-
-                            foreach (var link in cells2)
-                            {
-                                var subLink = link.GetAttribute("href").ToString();
-                                ConsoleColors.DrawColor("Cyan", $"Пишем sub ссылку: {subLink}");
-
-                                using (StreamWriter write = new StreamWriter(path2, true, System.Text.Encoding.UTF8))
-                                {
-                                    await write.WriteAsync(subLink + "\n");
-                                    write.Close();
-                                }
-                            }
-                        }
                     }
                 }
+
+                // Записываем все в файл
+                using (StreamWriter toFile = new StreamWriter(_path))
+                {
+                    foreach (var link in allLinks)
+                    {
+                        toFile.Write(link);
+                        ConsoleColors.DrawColor("DarkGray", $"Записываем в файл строку: {link}");
+                    }
+                }
+
             }
             catch (Exception ex)
             {
