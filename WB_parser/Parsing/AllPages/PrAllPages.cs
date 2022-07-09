@@ -1,7 +1,11 @@
 ﻿using AngleSharp;
 using AngleSharp.Dom;
 using AngleSharp.Html.Parser;
+using System.Text.RegularExpressions;
 using WB_parser.Color;
+using WB_parser.ExcelJob;
+using WB_parser.Parsing;
+using WB_parser.Variable;
 
 namespace WB_parser.Parsing.AllPages
 {
@@ -131,7 +135,7 @@ namespace WB_parser.Parsing.AllPages
                     }
                 }
 
-                // Записываем все в файл
+                // Записываем все в txt файл
                 using (StreamWriter toFile = new StreamWriter(_path))
                 {
                     foreach (var link in allLinks)
@@ -140,6 +144,65 @@ namespace WB_parser.Parsing.AllPages
                         ConsoleColors.DrawColor("DarkGray", $"Записываем в файл строку: {link}");
                     }
                 }
+
+                // Работаем с регулярками
+                // (?<="lower-price">).*?(?=</ins>) - берет цену без скидки
+
+
+                int colNum;
+                int rowNum;
+
+                // Парсим по всем страницам данные по-порядку
+                // 1) Наименование товара
+
+
+
+                // 2) Цена со скидкой
+                string pattern = @"(?<=""lower - price"">).*?(?=</ins>)";
+
+                colNum = 1;
+                rowNum = 2;
+
+                using(StreamReader file = new StreamReader(_path))
+                {
+                    string? line = String.Empty;
+                    string lineWithWb = String.Empty;
+
+                    while ((line = await file.ReadLineAsync()) != null)
+                    {
+                        rowNum++;
+
+                        if (!line.Contains("wildberries.ru"))
+                        {
+                            lineWithWb = "https://www.wildberries.ru/" + line;
+
+                            GetCode.GetHtmlCode(lineWithWb);
+                            ConsoleColors.DrawColor("DarkGray", $"Получен html код страницы: {lineWithWb}");
+
+                            VariablesForReport.tovPriceWithDiscount = Regex.Match(lineWithWb, pattern).ToString();
+
+                            ConsoleColors.DrawColor("DarkGray", $"Получили цену со скидкой: {VariablesForReport.tovPriceWithDiscount}");
+
+                            JobWithExcel.ExcJob(1, 1, rowNum, Directory.GetCurrentDirectory() + @"\Urls\Discount_Report.xlsx", VariablesForReport.tovPriceWithDiscount);
+                        }
+                        else
+                        {
+                            GetCode.GetHtmlCode(line);
+                            ConsoleColors.DrawColor("DarkGray", $"Получен html код страницы: {line}");
+
+                            VariablesForReport.tovPriceWithDiscount = Regex.Match(line, pattern).ToString();
+
+                            ConsoleColors.DrawColor("DarkGray", $"Получили цену со скидкой: {VariablesForReport.tovPriceWithDiscount}");
+
+                            JobWithExcel.ExcJob(1, 1, rowNum, Directory.GetCurrentDirectory() + @"\Urls\Discount_Report.xlsx", VariablesForReport.tovPriceWithDiscount);
+                        }
+                    }
+                }
+
+                // 3) Цена без скидки
+
+                // Вызываем метод для работы с Excel и пишем в него полученные со страниц данные (отдельный метод)
+                JobWithExcel.ExcJob(1, 0, 0, Directory.GetCurrentDirectory() + @"\Urls\Discount_Report.xlsx", VariablesForReport.tovName);
 
             }
             catch (Exception ex)
