@@ -28,7 +28,7 @@ namespace WB_parser.Parsing
                 HttpWebResponse response = (HttpWebResponse)_request.GetResponse();
                 var stream = response.GetResponseStream();
                 if (stream != null) Response = new StreamReader(stream).ReadToEnd();
-                //Console.WriteLine(Response);
+                //Console.WriteLine("Response - " + Response);
 
             }
             catch (Exception ex)

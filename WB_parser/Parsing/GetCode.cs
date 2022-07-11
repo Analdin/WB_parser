@@ -5,6 +5,11 @@ namespace WB_parser.Parsing
 {
     public class GetCode
     {
+        /// <summary>
+        /// Получаем html код страницы сайта
+        /// </summary>
+        /// <param name="urlAddress"> url с которого берем информацию </param>
+        /// <returns> возвращаем html код </returns>
         public static string GetHtmlCode(string urlAddress)
         {
             string data = "";

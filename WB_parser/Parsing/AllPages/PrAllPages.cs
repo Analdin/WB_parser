@@ -4,7 +4,6 @@ using AngleSharp.Html.Parser;
 using System.Text.RegularExpressions;
 using WB_parser.Color;
 using WB_parser.ExcelJob;
-using WB_parser.Parsing;
 using WB_parser.Variable;
 
 namespace WB_parser.Parsing.AllPages
@@ -32,6 +31,17 @@ namespace WB_parser.Parsing.AllPages
 
                 // -- Заходим на главную сайта, парсим все ссылки с нее --
                 _path = Directory.GetCurrentDirectory() + @"\Urls\allUrls.txt";
+
+                string[] lines = File.ReadAllLines(_path);
+                if (lines.Length == 0)
+                {
+                    ConsoleColors.DrawColor("Gray", $"Файл txt пуст, записываем его");
+                }
+                else
+                {
+                    ConsoleColors.DrawColor("Gray", $"Файл txt заполнен, пропускаем его");
+                    goto excelWrite;
+                }
 
                 var parser = new HtmlParser();
                 var config = Configuration.Default.WithDefaultLoader();
@@ -145,6 +155,8 @@ namespace WB_parser.Parsing.AllPages
                     }
                 }
 
+                excelWrite:
+
                 // Работаем с регулярками
                 // (?<="lower-price">).*?(?=</ins>) - берет цену без скидки
 
@@ -159,42 +171,116 @@ namespace WB_parser.Parsing.AllPages
 
                 // 2) Цена со скидкой
                 string pattern = @"(?<=""lower - price"">).*?(?=</ins>)";
+                string pattern2 = @"(?<=goods-card__price-now"" >).*? (?=</ span >\ )";
 
-                colNum = 1;
-                rowNum = 2;
+                colNum = 2;
+                rowNum = 1;
 
                 using(StreamReader file = new StreamReader(_path))
                 {
+                    readNextRow:
+
                     string? line = String.Empty;
                     string lineWithWb = String.Empty;
 
                     while ((line = await file.ReadLineAsync()) != null)
                     {
                         rowNum++;
+                        ConsoleColors.DrawColor("Cyan", $"Получил строку с файла: {line}");
 
                         if (!line.Contains("wildberries.ru"))
                         {
-                            lineWithWb = "https://www.wildberries.ru/" + line;
+                            lineWithWb = "https://www.wildberries.ru" + line;
 
-                            GetCode.GetHtmlCode(lineWithWb);
-                            ConsoleColors.DrawColor("DarkGray", $"Получен html код страницы: {lineWithWb}");
+                            var request = new GetRequest(lineWithWb);
+                            request.Run();
 
-                            VariablesForReport.tovPriceWithDiscount = Regex.Match(lineWithWb, pattern).ToString();
+                            ConsoleColors.DrawColor("DarkGray", $"Получен html код страницы1: {lineWithWb}");
 
-                            ConsoleColors.DrawColor("DarkGray", $"Получили цену со скидкой: {VariablesForReport.tovPriceWithDiscount}");
+                            MatchCollection matches = Regex.Matches(line, pattern2);
 
-                            JobWithExcel.ExcJob(1, 1, rowNum, Directory.GetCurrentDirectory() + @"\Urls\Discount_Report.xlsx", VariablesForReport.tovPriceWithDiscount);
+                            foreach (Match match in matches)
+                            {
+                                if (String.IsNullOrWhiteSpace(match.Value))
+                                {
+                                    MatchCollection matches2 = Regex.Matches(lineWithWb, pattern2);
+
+                                    foreach (Match match2 in matches2)
+                                    {
+                                        VariablesForReport.tovPriceWithDiscount = match2.Value;
+
+                                        ConsoleColors.DrawColor("DarkGray", $"Получили цену со скидкой1: {VariablesForReport.tovPriceWithDiscount}");
+
+                                        JobWithExcel.ExcJob(1, colNum, rowNum, Directory.GetCurrentDirectory() + @"\Urls\Discount_Report.xlsx", VariablesForReport.tovPriceWithDiscount);
+                                    }
+                                }
+                                else if (!String.IsNullOrWhiteSpace(match.Value))
+                                {
+                                    foreach (Match match3 in matches)
+                                    {
+                                        if (String.IsNullOrWhiteSpace(match3.Value)) goto readNextRow;
+
+                                        VariablesForReport.tovPriceWithDiscount = match3.Value;
+
+                                        ConsoleColors.DrawColor("DarkGray", $"Получили цену со скидкой1: {VariablesForReport.tovPriceWithDiscount}");
+
+                                        JobWithExcel.ExcJob(1, colNum, rowNum, Directory.GetCurrentDirectory() + @"\Urls\Discount_Report.xlsx", VariablesForReport.tovPriceWithDiscount);
+                                    }
+                                }
+                                else
+                                {
+                                    goto readNextRow;
+                                }
+                            }
                         }
                         else
                         {
-                            GetCode.GetHtmlCode(line);
-                            ConsoleColors.DrawColor("DarkGray", $"Получен html код страницы: {line}");
+                            var request = new GetRequest(line);
+                            request.Run();
 
-                            VariablesForReport.tovPriceWithDiscount = Regex.Match(line, pattern).ToString();
+                            ConsoleColors.DrawColor("DarkGray", $"Получен html код страницы2: {line}");
 
-                            ConsoleColors.DrawColor("DarkGray", $"Получили цену со скидкой: {VariablesForReport.tovPriceWithDiscount}");
+                            MatchCollection matches = Regex.Matches(line, pattern2);
 
-                            JobWithExcel.ExcJob(1, 1, rowNum, Directory.GetCurrentDirectory() + @"\Urls\Discount_Report.xlsx", VariablesForReport.tovPriceWithDiscount);
+                            foreach(Match match in matches)
+                            {
+                                VariablesForReport.tovPriceWithDiscount = match.Value;
+
+                                ConsoleColors.DrawColor("DarkGray", $"Получили цену со скидкой1: {VariablesForReport.tovPriceWithDiscount}");
+
+                                JobWithExcel.ExcJob(1, colNum, rowNum, Directory.GetCurrentDirectory() + @"\Urls\Discount_Report.xlsx", VariablesForReport.tovPriceWithDiscount);
+
+                                //if (String.IsNullOrWhiteSpace(match.Value))
+                                //{
+                                //    MatchCollection matches2 = Regex.Matches(lineWithWb, pattern2);
+
+                                //    foreach (Match match2 in matches2)
+                                //    {
+                                //        VariablesForReport.tovPriceWithDiscount = match2.Value;
+
+                                //        ConsoleColors.DrawColor("DarkGray", $"Получили цену со скидкой1: {VariablesForReport.tovPriceWithDiscount}");
+
+                                //        JobWithExcel.ExcJob(1, colNum, rowNum, Directory.GetCurrentDirectory() + @"\Urls\Discount_Report.xlsx", VariablesForReport.tovPriceWithDiscount);
+                                //    }
+                                //}
+                                //else if (matches.Count > 0)
+                                //{
+                                //    foreach (Match match3 in matches)
+                                //    {
+                                //        if(String.IsNullOrWhiteSpace(match3.Value)) goto readNextRow;
+
+                                //        VariablesForReport.tovPriceWithDiscount = match3.Value;
+
+                                //        ConsoleColors.DrawColor("DarkGray", $"Получили цену со скидкой1: {VariablesForReport.tovPriceWithDiscount}");
+
+                                //        JobWithExcel.ExcJob(1, colNum, rowNum, Directory.GetCurrentDirectory() + @"\Urls\Discount_Report.xlsx", VariablesForReport.tovPriceWithDiscount);
+                                //    }
+                                //}
+                                //else  
+                                //{
+                                //    goto readNextRow;
+                                //}
+                            }
                         }
                     }
                 }
@@ -202,7 +288,7 @@ namespace WB_parser.Parsing.AllPages
                 // 3) Цена без скидки
 
                 // Вызываем метод для работы с Excel и пишем в него полученные со страниц данные (отдельный метод)
-                JobWithExcel.ExcJob(1, 0, 0, Directory.GetCurrentDirectory() + @"\Urls\Discount_Report.xlsx", VariablesForReport.tovName);
+                //JobWithExcel.ExcJob(1, 0, 0, Directory.GetCurrentDirectory() + @"\Urls\Discount_Report.xlsx", VariablesForReport.tovName);
 
             }
             catch (Exception ex)
