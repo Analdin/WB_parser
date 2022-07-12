@@ -162,35 +162,19 @@ namespace WB_parser.Parsing.AllPages
 
                 excelWrite:
 
-                // Работаем с регулярками
-                // (?<="lower-price">).*?(?=</ins>) - берет цену без скидки
-
-
                 int colNum;
                 int rowNum;
-
-                // Парсим по всем страницам данные по-порядку
-                // 1) Наименование товара
-
-
-
-                // 2) Цена со скидкой
-                string pattern = @"(?<=""lower - price"">).*?(?=</ins>)";
-                string pattern2 = @"(?<=goods-card__price-now"" >).*? (?=</ span >\ )";
 
                 colNum = 2;
                 rowNum = 1;
 
                 using(StreamReader file = new StreamReader(_path))
                 {
-                    readNextRow:
-
                     string? line = String.Empty;
                     string lineWithWb = String.Empty;
 
                     while ((line = await file.ReadLineAsync()) != null)
-                    {
-  
+                    {  
                         ConsoleColors.DrawColor("Cyan", $"Получил строку с файла: {line}");
 
                         if (!line.Contains("wildberries.ru"))
@@ -204,12 +188,12 @@ namespace WB_parser.Parsing.AllPages
 
                             driver.Navigate().GoToUrl(lineWithWb);
 
-                            Thread.Sleep(5000);
+                            Thread.Sleep(2000);
 
                             Actions actions = new Actions(driver);
                             actions.SendKeys(Keys.PageDown).Build().Perform();
 
-                            Thread.Sleep(5000);
+                            Thread.Sleep(2000);
 
                             List<IWebElement> elms = driver.FindElements(By.XPath("//span[contains(@class,'goods-card__price-now')]|//p[contains(@class, 'goods-card__price')]/span")).ToList();
 
@@ -219,8 +203,10 @@ namespace WB_parser.Parsing.AllPages
                                 VariablesForReport.tovPriceWithDiscount = elm.GetAttribute("innerText");
                                 ConsoleColors.DrawColor("DarkGray", $"Получили цену со скидкой1: {VariablesForReport.tovPriceWithDiscount}");
 
-                                JobWithExcel.ExcJob(1, colNum, rowNum, Directory.GetCurrentDirectory() + @"\Urls\Discount_Report.xlsx", VariablesForReport.tovPriceWithDiscount);
+                                JobWithExcel.ExcJob(1, colNum, Directory.GetCurrentDirectory() + @"\Urls\Discount_Report.xlsx", VariablesForReport.tovPriceWithDiscount);
                             }
+
+                            //driver.Close();
                         }
                         else
                         {
@@ -236,27 +222,68 @@ namespace WB_parser.Parsing.AllPages
                             Actions actions = new Actions(driver);
                             actions.SendKeys(Keys.PageDown).Build().Perform();
 
-                            Thread.Sleep(25000);
+                            Thread.Sleep(5000);
 
+                            // Парсинг цен со скидкой
                             List<IWebElement> elms = driver.FindElements(By.XPath("//span[contains(@class,'goods-card__price-now')]|//p[contains(@class, 'goods-card__price')]/span")).ToList();
+
+                            // Парсинг цен без скидки
+                            List<IWebElement> elmsWithoutDiscount = driver.FindElements(By.XPath("//del[contains(@class, 'goods-card__price-last')]")).ToList();
+
+                            // Парсинг наименований товара
+                            List<IWebElement> tovNames = driver.FindElements(By.XPath("//p[contains(@class, 'goods-card__description')]/span")).ToList();
+
+                            // Парсинг артикулов
+                            List<IWebElement> cardNums = driver.FindElements(By.XPath("//li[contains(@class, 'goods-card')]")).ToList();
+
+                            colNum = 1;
+
+                            foreach (IWebElement elm in tovNames)
+                            {
+                                rowNum++;
+                                VariablesForReport.tovName = elm.GetAttribute("innerText");
+                                ConsoleColors.DrawColor("DarkGray", $"Получили наименование товара: {VariablesForReport.tovName}");
+
+                                JobWithExcel.ExcJob(1, colNum, Directory.GetCurrentDirectory() + @"\Urls\Discount_Report.xlsx", VariablesForReport.tovName);
+                            }
+
+                            colNum = 2;
 
                             foreach (IWebElement elm in elms)
                             {
                                 rowNum++;
                                 VariablesForReport.tovPriceWithDiscount = elm.GetAttribute("innerText");
-                                ConsoleColors.DrawColor("DarkGray", $"Получили цену со скидкой2: {VariablesForReport.tovPriceWithDiscount}");
+                                ConsoleColors.DrawColor("DarkGray", $"Получили цену со скидкой: {VariablesForReport.tovPriceWithDiscount}");
 
-                                JobWithExcel.ExcJob(1, colNum, rowNum, Directory.GetCurrentDirectory() + @"\Urls\Discount_Report.xlsx", VariablesForReport.tovPriceWithDiscount);
+                                JobWithExcel.ExcJob(1, colNum, Directory.GetCurrentDirectory() + @"\Urls\Discount_Report.xlsx", VariablesForReport.tovPriceWithDiscount);
                             }
+
+                            colNum = 3;
+
+                            foreach (IWebElement elm in elmsWithoutDiscount)
+                            {
+                                rowNum++;
+                                VariablesForReport.tovPriceWithoutDiscount = elm.GetAttribute("innerText");
+                                ConsoleColors.DrawColor("DarkGray", $"Получили цену без скидки: {VariablesForReport.tovPriceWithoutDiscount}");
+
+                                JobWithExcel.ExcJob(1, colNum, Directory.GetCurrentDirectory() + @"\Urls\Discount_Report.xlsx", VariablesForReport.tovPriceWithoutDiscount);
+                            }
+
+                            colNum = 4;
+
+                            foreach (IWebElement elm in cardNums)
+                            {
+                                rowNum++;
+                                VariablesForReport.cardNum = elm.GetAttribute("data-popup-nm-id");
+                                ConsoleColors.DrawColor("DarkGray", $"Получили артикул товара: {VariablesForReport.cardNum}");
+
+                                JobWithExcel.ExcJob(1, colNum, Directory.GetCurrentDirectory() + @"\Urls\Discount_Report.xlsx", VariablesForReport.cardNum);
+                            }
+
+                            //driver.Close();
                         }
                     }
                 }
-
-                // 3) Цена без скидки
-
-                // Вызываем метод для работы с Excel и пишем в него полученные со страниц данные (отдельный метод)
-                //JobWithExcel.ExcJob(1, 0, 0, Directory.GetCurrentDirectory() + @"\Urls\Discount_Report.xlsx", VariablesForReport.tovName);
-
             }
             catch (Exception ex)
             {

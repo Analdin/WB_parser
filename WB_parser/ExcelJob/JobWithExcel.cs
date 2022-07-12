@@ -1,6 +1,7 @@
 ﻿using OfficeOpenXml;
 using WB_parser.Color;
 using WB_parser.Variable;
+using WB_parser.Parsing.AllPages;
 
 namespace WB_parser.ExcelJob
 {
@@ -14,8 +15,10 @@ namespace WB_parser.ExcelJob
         /// <param name="rowNum">Строка с которой нужно начать работу. Обычно = 0</param>
         /// <param name="path">Путь к документу</param>
         /// <param name="cellData">Что записывать</param>
-        public static void ExcJob(int sheetNum, int columnNum, int rowNum, string path, string cellData)
+        public static void ExcJob(int sheetNum, int columnNum, string path, string cellData)
         {
+            int rowNum = 1;
+
             FileInfo excTable = new FileInfo(path);
 
             ConsoleColors.DrawColor("DarkGray", $"Путь до таблицы - {path}");
@@ -41,16 +44,18 @@ namespace WB_parser.ExcelJob
                 // Берем лист по номеру
                 ExcelWorksheet loneSheet = exclPack.Workbook.Worksheets["Отчёт"];
 
-                // Количество колонок
-                //int colCount = loneSheet.Dimension.End.Row;
-                //ConsoleColors.DrawColor("DarkGray", $"Количество колонок в таблице с отчетом - {colCount}");
-                
-                //ConsoleColors.DrawColor("DarkGray", $"Работаем с колонкой - {columnNum}");
+                // Количество строк
+                //int iRowCnt = loneSheet.Cells.Where(cell => !cell.Value.ToString().Equals("")).Last().End.Row;
+
+                int iRowCnt = LastUsedRow.GetLastUsedRow(loneSheet, columnNum);
+
+                ConsoleColors.DrawColor("Cyan", $"Количество строк {iRowCnt}");
+                rowNum = iRowCnt + 1;
 
                 // Запись в строку
-                Variables.rowData = loneSheet.Cells[rowNum + 2, columnNum].Value == null ? "" : loneSheet.Cells[rowNum + 2, columnNum].Value.ToString();
+                loneSheet.Cells[rowNum, columnNum].Value = Variables.rowData;
 
-                //loneSheet.Cells[rowNum + 2, columnNum].Value = Variables.rowData;
+                exclPack.Save();
 
                 ConsoleColors.DrawColor("DarkGray", $"Записали данные: {Variables.rowData}, в строку - {rowNum} и колонку {columnNum}");
             }

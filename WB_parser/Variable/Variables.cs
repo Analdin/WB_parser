@@ -20,5 +20,6 @@ namespace WB_parser.Variable
         public static string tovName { get; set; }
         public static string tovPriceWithDiscount { get; set; }
         public static string tovPriceWithoutDiscount { get; set; }
+        public static string cardNum { get; set; }
     }
 }
