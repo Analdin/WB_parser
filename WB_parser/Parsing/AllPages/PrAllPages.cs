@@ -190,7 +190,7 @@ namespace WB_parser.Parsing.AllPages
 
                     while ((line = await file.ReadLineAsync()) != null)
                     {
-                        rowNum++;
+  
                         ConsoleColors.DrawColor("Cyan", $"Получил строку с файла: {line}");
 
                         if (!line.Contains("wildberries.ru"))
@@ -215,7 +215,8 @@ namespace WB_parser.Parsing.AllPages
 
                             foreach (IWebElement elm in elms)
                             {
-                                VariablesForReport.tovPriceWithDiscount = elm.GetAttribute("innertex");
+                                rowNum++;
+                                VariablesForReport.tovPriceWithDiscount = elm.GetAttribute("innerText");
                                 ConsoleColors.DrawColor("DarkGray", $"Получили цену со скидкой1: {VariablesForReport.tovPriceWithDiscount}");
 
                                 JobWithExcel.ExcJob(1, colNum, rowNum, Directory.GetCurrentDirectory() + @"\Urls\Discount_Report.xlsx", VariablesForReport.tovPriceWithDiscount);
@@ -241,7 +242,8 @@ namespace WB_parser.Parsing.AllPages
 
                             foreach (IWebElement elm in elms)
                             {
-                                VariablesForReport.tovPriceWithDiscount = elm.GetAttribute("innertex");
+                                rowNum++;
+                                VariablesForReport.tovPriceWithDiscount = elm.GetAttribute("innerText");
                                 ConsoleColors.DrawColor("DarkGray", $"Получили цену со скидкой2: {VariablesForReport.tovPriceWithDiscount}");
 
                                 JobWithExcel.ExcJob(1, colNum, rowNum, Directory.GetCurrentDirectory() + @"\Urls\Discount_Report.xlsx", VariablesForReport.tovPriceWithDiscount);
