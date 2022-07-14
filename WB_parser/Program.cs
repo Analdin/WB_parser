@@ -1,9 +1,7 @@
 ﻿using WB_parser.Menu;
 using WB_parser.Login;
 using WB_parser.Parsing;
-using System.Text.RegularExpressions;
 using WB_parser.Parsing.AllPages;
-using AngleSharp.Html.Parser;
 using WB_parser.Color;
 using WB_parser.Variable;
 

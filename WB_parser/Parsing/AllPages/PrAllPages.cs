@@ -225,16 +225,28 @@ namespace WB_parser.Parsing.AllPages
                             Thread.Sleep(5000);
 
                             // Парсинг цен со скидкой
-                            List<IWebElement> elms = driver.FindElements(By.XPath("//span[contains(@class,'goods-card__price-now')]|//p[contains(@class, 'goods-card__price')]/span")).ToList();
+                            List<IWebElement> elms = driver.FindElements(By.XPath("//span[contains(@class,'goods-card__price-now')]|//p[contains(@class, 'goods-card__price')]/span|//ins[contains(@class, 'lower-price')]")).ToList();
 
                             // Парсинг цен без скидки
-                            List<IWebElement> elmsWithoutDiscount = driver.FindElements(By.XPath("//del[contains(@class, 'goods-card__price-last')]")).ToList();
+                            List<IWebElement> elmsWithoutDiscount = driver.FindElements(By.XPath("//del[contains(@class, 'goods-card__price-last')]|//span[contains(@class, 'price-old-block')]/del")).ToList();
 
                             // Парсинг наименований товара
-                            List<IWebElement> tovNames = driver.FindElements(By.XPath("//p[contains(@class, 'goods-card__description')]/span")).ToList();
+                            List<IWebElement> tovNames = driver.FindElements(By.XPath("//p[contains(@class, 'goods-card__description')]/span|//span[contains(@class, 'goods-name')]")).ToList();
 
                             // Парсинг артикулов
-                            List<IWebElement> cardNums = driver.FindElements(By.XPath("//li[contains(@class, 'goods-card')]")).ToList();
+                            List<IWebElement> cardNums = driver.FindElements(By.XPath("//li[contains(@class, 'goods-card')]|//div[contains(@class, 'product-card-overflow')]/div/div[contains(@id,'')]")).ToList();
+
+                            IWebElement title = driver.FindElement(By.XPath("//h1[contains(@class, 'catalog-title')]"));
+                            string titleTxt = title.GetAttribute("innerText");
+
+                            if (String.IsNullOrWhiteSpace(Variables.category))
+                            {
+                                ConsoleColors.DrawColor("DarkGray", $"Параметр 'Категория' - не заполнен");
+                            }
+                            else if(Variables.category.Trim().ToLower() == titleTxt.Trim().ToLower())
+                            {
+                                ConsoleColors.DrawColor("DarkGray", $"Сбор данных будет только из категории {titleTxt}");
+                            }
 
                             colNum = 1;
 

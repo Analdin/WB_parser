@@ -7,6 +7,9 @@ namespace WB_parser.ExcelJob
 {
     public class JobWithExcel
     {
+        public static int FirstPrice { get; set; }
+        public static int LastPrice { get; set; }
+
         /// <summary>
         /// Метод для работа с Excel таблицей
         /// </summary>
@@ -37,16 +40,9 @@ namespace WB_parser.ExcelJob
 
             using (ExcelPackage exclPack = new ExcelPackage(excTable))
             {
-                // Количество строк
                 int sheetsCount = exclPack.Workbook.Worksheets.Count;
                 ConsoleColors.DrawColor("DarkGray", $"Количество листов в таблице с отчетом - {sheetsCount}");
-
-                // Берем лист по номеру
                 ExcelWorksheet loneSheet = exclPack.Workbook.Worksheets["Отчёт"];
-
-                // Количество строк
-                //int iRowCnt = loneSheet.Cells.Where(cell => !cell.Value.ToString().Equals("")).Last().End.Row;
-
                 int iRowCnt = LastUsedRow.GetLastUsedRow(loneSheet, columnNum);
 
                 ConsoleColors.DrawColor("Cyan", $"Количество строк {iRowCnt}");
@@ -54,6 +50,23 @@ namespace WB_parser.ExcelJob
 
                 // Запись в строку
                 loneSheet.Cells[rowNum, columnNum].Value = Variables.rowData;
+
+                // Проверка на условия пользователя
+                ConsoleColors.DrawColor("Cyan", $"Проверяем на соответствие условиям, полученное значение {Variables.rowData}");
+
+                var split = Variables.priceChoose.Split('-');
+                FirstPrice = Convert.ToInt32(split[0].Trim());
+                LastPrice = Convert.ToInt32(split[1].Trim());
+
+                // Условие: диапазон цен
+                if (String.IsNullOrWhiteSpace(Variables.priceChoose))
+                {
+                    ConsoleColors.DrawColor("Gray", $"Диапазон цены не задан");
+                }
+                else if(Convert.ToInt32(Variables.rowData) >= FirstPrice && Convert.ToInt32(Variables.rowData) <= LastPrice)
+                {
+                    ConsoleColors.DrawColor("Cyan", $"Сохраняем цены только в диапазоне: {FirstPrice} - {LastPrice}");
+                }
 
                 exclPack.Save();
 
