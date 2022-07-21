@@ -7,10 +7,10 @@ namespace WB_parser.Parsing.AllPages
         public static int GetLastUsedRow(ExcelWorksheet sheet, int colNum)
         {
             var row = sheet.Dimension.End.Row;
-            while(row >= 1)
+            while (row >= 1)
             {
-                var range = sheet.Cells[row, colNum, row, sheet.Dimension.End.Row];
-                if(range.Any(c => !string.IsNullOrEmpty(c.Text)))
+                var range = sheet.Cells[row, colNum, row, sheet.Dimension.End.Column];
+                if (range.Any(c => !string.IsNullOrEmpty(c.Text)))
                 {
                     break;
                 }

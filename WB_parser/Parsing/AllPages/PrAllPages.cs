@@ -29,7 +29,9 @@ namespace WB_parser.Parsing.AllPages
         {
             try
             {
-                IWebDriver driver = new ChromeDriver();
+                var chromeOptions = new ChromeOptions();
+                chromeOptions.AddArgument("log-level=3");
+                IWebDriver driver = new ChromeDriver(chromeOptions);
 
                 List<string> allLinks = new List<string>();
                 List<string> linksLst = new List<string>();
@@ -73,7 +75,7 @@ namespace WB_parser.Parsing.AllPages
 
                 // -- Конец парсинга главной --
 
-                using(FileStream fs = new FileStream(_path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
+                using (FileStream fs = new FileStream(_path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
                 {
                     using (StreamReader reader = new StreamReader(fs))
                     {
@@ -163,7 +165,7 @@ namespace WB_parser.Parsing.AllPages
                     }
                 }
 
-                excelWrite:
+            excelWrite:
 
                 int colNum;
                 int rowNum;
@@ -171,13 +173,13 @@ namespace WB_parser.Parsing.AllPages
                 colNum = 2;
                 rowNum = 1;
 
-                using(StreamReader file = new StreamReader(_path))
+                using (StreamReader file = new StreamReader(_path))
                 {
                     string? line = String.Empty;
                     string lineWithWb = String.Empty;
 
                     while ((line = await file.ReadLineAsync()) != null)
-                    {  
+                    {
                         ConsoleColors.DrawColor("Cyan", $"Получил строку с файла: {line}");
 
                         if (!line.Contains("wildberries.ru"))
@@ -246,7 +248,7 @@ namespace WB_parser.Parsing.AllPages
                             {
                                 ConsoleColors.DrawColor("DarkGray", $"Параметр 'Категория' - не заполнен");
                             }
-                            else if(Variables.category.Trim().ToLower() == titleTxt.Trim().ToLower())
+                            else if (Variables.category.Trim().ToLower() == titleTxt.Trim().ToLower())
                             {
                                 ConsoleColors.DrawColor("DarkGray", $"Сбор данных будет только из категории {titleTxt}");
                             }

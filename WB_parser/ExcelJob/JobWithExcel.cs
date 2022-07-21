@@ -85,10 +85,10 @@ namespace WB_parser.ExcelJob
                 int diff = 0;
 
                 // Вычисления: Считаем разницу между старой и новой ценой
-                for(int i = 0; i <= iRowCnt; i++)
+                for (int i = 1; i <= iRowCnt; i++)
                 {
-                    newPrice = (int)loneSheet.Cells[$"B{i}"].Value;
-                    oldPrice = (int)loneSheet.Cells[$"C{i}"].Value;
+                    int.TryParse(loneSheet.Cells[i, 2].Text, out newPrice);
+                    int.TryParse(loneSheet.Cells[i, 3].Text, out oldPrice);
 
                     if (newPrice == 0 || oldPrice == 0) break;
 
