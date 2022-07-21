@@ -86,13 +86,16 @@ namespace MainJob
 
                                         ConsoleColors.DrawColor("Cyan", $"Сбор url закончен.");
 
+                                        Thread.Sleep(500);
+                                        //Console.Clear();
+
                                         goto default;
                                     }
                                     else
                                     {
                                         ConsoleColors.DrawColor("Red", $"Не верные логин и пароль, попробуйте ввести еще раз..");
                                         Thread.Sleep(1500);
-                                        Console.Clear();
+                                        //Console.Clear();
                                         goto case 0;
                                     }
                                 }

@@ -36,6 +36,9 @@ namespace WB_parser.Parsing.AllPages
 
                 // -- Заходим на главную сайта, парсим все ссылки с нее --
                 _path = Directory.GetCurrentDirectory() + @"\Urls\allUrls.txt";
+                ConsoleColors.DrawColor("Gray", $"_path - {_path}");
+
+                Console.ReadLine();
 
                 string[] lines = File.ReadAllLines(_path);
                 if (lines.Length == 0)
@@ -267,6 +270,8 @@ namespace WB_parser.Parsing.AllPages
                                 VariablesForReport.tovPriceWithDiscount = elm.GetAttribute("innerText");
                                 ConsoleColors.DrawColor("DarkGray", $"Получили цену со скидкой: {VariablesForReport.tovPriceWithDiscount}");
 
+                                VariablesForReport.tovPriceWithDiscount = VariablesForReport.tovPriceWithDiscount.Replace("₽", "");
+
                                 JobWithExcel.ExcJob(1, colNum, Directory.GetCurrentDirectory() + @"\Urls\Discount_Report.xlsx", VariablesForReport.tovPriceWithDiscount);
                             }
 
@@ -277,6 +282,8 @@ namespace WB_parser.Parsing.AllPages
                                 rowNum++;
                                 VariablesForReport.tovPriceWithoutDiscount = elm.GetAttribute("innerText");
                                 ConsoleColors.DrawColor("DarkGray", $"Получили цену без скидки: {VariablesForReport.tovPriceWithoutDiscount}");
+
+                                VariablesForReport.tovPriceWithoutDiscount = VariablesForReport.tovPriceWithoutDiscount.Replace("₽", "");
 
                                 JobWithExcel.ExcJob(1, colNum, Directory.GetCurrentDirectory() + @"\Urls\Discount_Report.xlsx", VariablesForReport.tovPriceWithoutDiscount);
                             }

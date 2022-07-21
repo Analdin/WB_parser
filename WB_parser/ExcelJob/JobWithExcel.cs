@@ -28,7 +28,7 @@ namespace WB_parser.ExcelJob
 
             Variables.rowData = cellData;
 
-            if(String.IsNullOrWhiteSpace(cellData))
+            if (String.IsNullOrWhiteSpace(cellData))
             {
                 ConsoleColors.DrawColor("Red", $"Что-то должно быть записано в cellData... Сейчас она пуста.");
                 //throw new Exception();
@@ -59,18 +59,48 @@ namespace WB_parser.ExcelJob
                 LastPrice = Convert.ToInt32(split[1].Trim());
 
                 // Условие: диапазон цен
-                if (String.IsNullOrWhiteSpace(Variables.priceChoose))
+                bool result = int.TryParse(Variables.rowData, out var resNumber);
+                if (result == true)
                 {
-                    ConsoleColors.DrawColor("Gray", $"Диапазон цены не задан");
+                    ConsoleColors.DrawColor("Gray", $"Сравниваем цену: {Variables.rowData} с введенным условием");
+                    if (resNumber >= FirstPrice && resNumber <= LastPrice)
+                    {
+                        ConsoleColors.DrawColor("Cyan", $"Сохраняем цены только в диапазоне: {FirstPrice} - {LastPrice}");
+                        exclPack.Save();
+                        ConsoleColors.DrawColor("DarkGray", $"Записали данные1: {Variables.rowData}, в строку - {rowNum} и колонку {columnNum}");
+                    }
                 }
-                else if(Convert.ToInt32(Variables.rowData) >= FirstPrice && Convert.ToInt32(Variables.rowData) <= LastPrice)
+                else if (FirstPrice == 0 && LastPrice == 0 | FirstPrice == 0 && LastPrice != 0 | FirstPrice != 0 && LastPrice == 0)
                 {
-                    ConsoleColors.DrawColor("Cyan", $"Сохраняем цены только в диапазоне: {FirstPrice} - {LastPrice}");
+                    exclPack.Save();
+                    ConsoleColors.DrawColor("DarkGray", $"Записали данные2: {Variables.rowData}, в строку - {rowNum} и колонку {columnNum}");
+                }
+                else
+                {
+                    ConsoleColors.DrawColor("Gray", $"Сейчас в переменной: {Variables.rowData} строка, не сравниваем с условием");
                 }
 
-                exclPack.Save();
+                var newPrice = 0;
+                var oldPrice = 0;
+                int diff = 0;
 
-                ConsoleColors.DrawColor("DarkGray", $"Записали данные: {Variables.rowData}, в строку - {rowNum} и колонку {columnNum}");
+                // Вычисления: Считаем разницу между старой и новой ценой
+                for(int i = 0; i <= iRowCnt; i++)
+                {
+                    newPrice = (int)loneSheet.Cells[$"B{i}"].Value;
+                    oldPrice = (int)loneSheet.Cells[$"C{i}"].Value;
+
+                    if (newPrice == 0 || oldPrice == 0) break;
+
+                    diff = oldPrice - newPrice;
+
+                    loneSheet.Cells[i, 5].Value = diff;
+                    exclPack.Save();
+                }
+
+                //exclPack.Save();
+
+                ConsoleColors.DrawColor("DarkGray", $"Записали данные3: {Variables.rowData}, в строку - {rowNum} и колонку {columnNum}");
             }
         }
     }
