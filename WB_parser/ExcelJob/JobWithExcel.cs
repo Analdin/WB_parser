@@ -98,7 +98,7 @@ namespace WB_parser.ExcelJob
                     exclPack.Save();
                 }
 
-                //exclPack.Save();
+                exclPack.Save();
 
                 ConsoleColors.DrawColor("DarkGray", $"Записали данные3: {Variables.rowData}, в строку - {rowNum} и колонку {columnNum}");
             }
