@@ -8,6 +8,7 @@ using WB_parser.Variable;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Interactions;
+using WB_parser.DataBase;
 
 namespace WB_parser.Parsing.AllPages
 {
@@ -29,6 +30,8 @@ namespace WB_parser.Parsing.AllPages
         {
             try
             {
+                DbHelper bdhelp = new DbHelper();
+
                 var chromeOptions = new ChromeOptions();
                 chromeOptions.AddArgument("log-level=3");
                 IWebDriver driver = new ChromeDriver(chromeOptions);
@@ -228,6 +231,37 @@ namespace WB_parser.Parsing.AllPages
                             actions.SendKeys(Keys.PageDown).Build().Perform();
 
                             Thread.Sleep(5000);
+
+                            // Парсим контейнеры, внутри то что нужно по товарам
+                            while (true)
+                            {
+
+                                List<IWebElement> parents = driver.FindElements(By.XPath("//ul[contains(@class, 'swiper-wrapper')]")).ToList();
+
+                                Console.WriteLine("Нашли товаров: " + parents.Count);
+
+
+                                foreach (IWebElement parent in parents)
+                                {
+
+                                    string zagolovok = parent.FindElement(By.XPath(".//a[contains(@class, 'bull-item__self-link auto-shy')]")).GetAttribute("innerText");
+
+                                    string priceWithDiscount = parent.FindElement(By.XPath(".//del[contains(@class, 'goods-card__price-last')]|//span[contains(@class, 'price-old-block')]/del")).GetAttribute("innerText");
+
+                                    string tovName = parent.FindElement(By.XPath(".//p[contains(@class, 'goods-card__description')]/span|//span[contains(@class, 'goods-name')]")).GetAttribute("innerText");
+
+                                    string cardNum = parent.FindElement(By.XPath(".//p[contains(@class, 'goods-card__description')]/span|//span[contains(@class, 'goods-name')]")).GetAttribute("innerText");
+
+                                    //здесь сохраняем спарсенную позицию.
+
+                                }
+
+                                IWebElement nextPage = driver.FindElement(By.XPath("//dalee"));
+
+                                if (nextPage.) break;
+                                nextPage.Click();
+                                instance.ActiveTab.WaitDownloading();
+                            }
 
                             // Парсинг цен со скидкой
                             List<IWebElement> elms = driver.FindElements(By.XPath("//span[contains(@class,'goods-card__price-now')]|//p[contains(@class, 'goods-card__price')]/span|//ins[contains(@class, 'lower-price')]")).ToList();
