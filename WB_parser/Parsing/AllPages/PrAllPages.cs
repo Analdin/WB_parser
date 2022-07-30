@@ -1,7 +1,6 @@
 ﻿using AngleSharp;
 using AngleSharp.Dom;
 using AngleSharp.Html.Parser;
-using System.Text.RegularExpressions;
 using WB_parser.Color;
 using WB_parser.ExcelJob;
 using WB_parser.Variable;
@@ -9,6 +8,7 @@ using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Interactions;
 using WB_parser.DataBase;
+using WB_parser.System;
 
 namespace WB_parser.Parsing.AllPages
 {
@@ -258,9 +258,18 @@ namespace WB_parser.Parsing.AllPages
 
                                 IWebElement nextPage = driver.FindElement(By.XPath("//dalee"));
 
-                                if (nextPage.) break;
-                                nextPage.Click();
-                                instance.ActiveTab.WaitDownloading();
+                                if(ElementPresent.TryFindElement(By.XPath(""), out nextPage)){
+                                    bool visible = ElementPresent.IsElementVisible(nextPage);
+                                    if (visible)
+                                    {
+                                        nextPage.Click();
+                                        ElementPresent.WaitDownloading(5000);
+                                    }
+                                    else
+                                    {
+                                        break;
+                                    }
+                                }
                             }
 
                             // Парсинг цен со скидкой
