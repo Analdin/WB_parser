@@ -1,1 +1,1 @@
-Simple disount parser
+Simple discount parser
