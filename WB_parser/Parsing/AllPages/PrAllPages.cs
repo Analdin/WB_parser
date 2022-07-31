@@ -8,7 +8,7 @@ using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Interactions;
 using WB_parser.DataBase;
-using WB_parser.System;
+using MySql.Data.MySqlClient;
 
 namespace WB_parser.Parsing.AllPages
 {
@@ -43,7 +43,7 @@ namespace WB_parser.Parsing.AllPages
                 _path = Directory.GetCurrentDirectory() + @"\Urls\allUrls.txt";
                 ConsoleColors.DrawColor("Gray", $"_path - {_path}");
 
-                Console.ReadLine();
+                //Console.ReadLine();
 
                 string[] lines = File.ReadAllLines(_path);
                 if (lines.Length == 0)
@@ -70,7 +70,7 @@ namespace WB_parser.Parsing.AllPages
                     ConsoleColors.DrawColor("Cyan", $"Ссылка: {neededLink}");
                     //Thread.Sleep(500);
 
-                    using (StreamWriter write = new StreamWriter(_path, true, System.Text.Encoding.UTF8))
+                    using (StreamWriter write = new StreamWriter(_path))
                     {
                         await write.WriteAsync(neededLink + "\n");
                     }
@@ -232,117 +232,133 @@ namespace WB_parser.Parsing.AllPages
 
                             Thread.Sleep(5000);
 
+                            int m = 0;
+
                             // Парсим контейнеры, внутри то что нужно по товарам
+
+                            bdhelp.OpenConnection();
+
                             while (true)
                             {
+                                List<IWebElement> allElms = driver.FindElements(By.XPath("//li[contains(@class, 'j-product-item')]")).ToList();
 
-                                List<IWebElement> parents = driver.FindElements(By.XPath("//ul[contains(@class, 'swiper-wrapper')]")).ToList();
-
-                                Console.WriteLine("Нашли товаров: " + parents.Count);
-
-
-                                foreach (IWebElement parent in parents)
+                                foreach(var elm in allElms)
                                 {
+                                    m++;
+                                    VariablesForReport.tovName = elm.FindElement(By.XPath(".//p[contains(@class, 'goods-card__description')]/span|.//span[contains(@class, 'goods-name')]")).Text;
+                                    VariablesForReport.tovPriceWithDiscount = elm.FindElement(By.XPath(".//del[contains(@class, 'goods-card__price-last')]|.//span[contains(@class, 'price-old-block')]/del")).Text;
+                                    VariablesForReport.tovPriceWithoutDiscount = elm.FindElement(By.XPath(".//del[contains(@class, 'goods-card__price-last')]|.//span[contains(@class, 'price-old-block')]/del")).Text;
+                                    VariablesForReport.cardNum = elm.FindElement(By.XPath("//li[contains(@class, 'goods-card')]|//div[contains(@class, 'product-card-overflow')]/div/div[contains(@id,'')]")).ToString();
 
-                                    string zagolovok = parent.FindElement(By.XPath(".//a[contains(@class, 'bull-item__self-link auto-shy')]")).GetAttribute("innerText");
+                                    var query = $@"INSERT INTO `parser_report`(`product_name`) VALUES('{VariablesForReport.tovName}')";
+                                    var command = new MySqlCommand(query, bdhelp.Connection);
+                                    command.ExecuteNonQuery();
 
-                                    string priceWithDiscount = parent.FindElement(By.XPath(".//del[contains(@class, 'goods-card__price-last')]|//span[contains(@class, 'price-old-block')]/del")).GetAttribute("innerText");
+                                    var query1 = $@"UPDATE `parser_report` SET `price_w_discount`='{VariablesForReport.tovPriceWithDiscount}' WHERE `Num` = {m}";
+                                    var command1 = new MySqlCommand(query1, bdhelp.Connection);
+                                    command1.ExecuteNonQuery();
 
-                                    string tovName = parent.FindElement(By.XPath(".//p[contains(@class, 'goods-card__description')]/span|//span[contains(@class, 'goods-name')]")).GetAttribute("innerText");
+                                    var query2 = $@"UPDATE `parser_report` SET `price_without_discount`='{VariablesForReport.tovPriceWithoutDiscount}' WHERE `Num` = {m}";
+                                    var command2 = new MySqlCommand(query2, bdhelp.Connection);
+                                    command2.ExecuteNonQuery();
 
-                                    string cardNum = parent.FindElement(By.XPath(".//p[contains(@class, 'goods-card__description')]/span|//span[contains(@class, 'goods-name')]")).GetAttribute("innerText");
-
-                                    //здесь сохраняем спарсенную позицию.
-
-                                }
-
-                                IWebElement nextPage = driver.FindElement(By.XPath("//dalee"));
-
-                                if(ElementPresent.TryFindElement(By.XPath(""), out nextPage)){
-                                    bool visible = ElementPresent.IsElementVisible(nextPage);
-                                    if (visible)
-                                    {
-                                        nextPage.Click();
-                                        ElementPresent.WaitDownloading(5000);
-                                    }
-                                    else
-                                    {
-                                        break;
-                                    }
+                                    var query3 = $@"UPDATE `parser_report` SET `vendor_code`='{VariablesForReport.cardNum}' WHERE `Num` = {m}";
+                                    var command3 = new MySqlCommand(query3, bdhelp.Connection);
+                                    command3.ExecuteNonQuery();
                                 }
                             }
+
+                            bdhelp.CloseConnection();
 
                             // Парсинг цен со скидкой
-                            List<IWebElement> elms = driver.FindElements(By.XPath("//span[contains(@class,'goods-card__price-now')]|//p[contains(@class, 'goods-card__price')]/span|//ins[contains(@class, 'lower-price')]")).ToList();
+                            //List<IWebElement> elms = driver.FindElements(By.XPath("//span[contains(@class,'goods-card__price-now')]|//p[contains(@class, 'goods-card__price')]/span|//ins[contains(@class, 'lower-price')]")).ToList();
 
-                            // Парсинг цен без скидки
-                            List<IWebElement> elmsWithoutDiscount = driver.FindElements(By.XPath("//del[contains(@class, 'goods-card__price-last')]|//span[contains(@class, 'price-old-block')]/del")).ToList();
+                            //// Парсинг цен без скидки
+                            //List<IWebElement> elmsWithoutDiscount = driver.FindElements(By.XPath("//del[contains(@class, 'goods-card__price-last')]|//span[contains(@class, 'price-old-block')]/del")).ToList();
 
-                            // Парсинг наименований товара
-                            List<IWebElement> tovNames = driver.FindElements(By.XPath("//p[contains(@class, 'goods-card__description')]/span|//span[contains(@class, 'goods-name')]")).ToList();
+                            //// Парсинг наименований товара
+                            //List<IWebElement> tovNames = driver.FindElements(By.XPath("//p[contains(@class, 'goods-card__description')]/span|//span[contains(@class, 'goods-name')]")).ToList();
 
-                            // Парсинг артикулов
-                            List<IWebElement> cardNums = driver.FindElements(By.XPath("//li[contains(@class, 'goods-card')]|//div[contains(@class, 'product-card-overflow')]/div/div[contains(@id,'')]")).ToList();
+                            //// Парсинг артикулов
+                            //List<IWebElement> cardNums = driver.FindElements(By.XPath("//li[contains(@class, 'goods-card')]|//div[contains(@class, 'product-card-overflow')]/div/div[contains(@id,'')]")).ToList();
 
-                            IWebElement title = driver.FindElement(By.XPath("//h1[contains(@class, 'catalog-title')]"));
-                            string titleTxt = title.GetAttribute("innerText");
+                            //IWebElement title = driver.FindElement(By.XPath("//h1[contains(@class, 'catalog-title')]"));
+                            //string titleTxt = title.GetAttribute("innerText");
 
-                            if (String.IsNullOrWhiteSpace(Variables.category))
-                            {
-                                ConsoleColors.DrawColor("DarkGray", $"Параметр 'Категория' - не заполнен");
-                            }
-                            else if (Variables.category.Trim().ToLower() == titleTxt.Trim().ToLower())
-                            {
-                                ConsoleColors.DrawColor("DarkGray", $"Сбор данных будет только из категории {titleTxt}");
-                            }
+                            //if (String.IsNullOrWhiteSpace(Variables.category))
+                            //{
+                            //    ConsoleColors.DrawColor("DarkGray", $"Параметр 'Категория' - не заполнен");
+                            //}
+                            //else if (Variables.category.Trim().ToLower() == titleTxt.Trim().ToLower())
+                            //{
+                            //    ConsoleColors.DrawColor("DarkGray", $"Сбор данных будет только из категории {titleTxt}");
+                            //}
 
-                            colNum = 1;
+                            //colNum = 1;
+                            //bdhelp.OpenConnection();
 
-                            foreach (IWebElement elm in tovNames)
-                            {
-                                rowNum++;
-                                VariablesForReport.tovName = elm.GetAttribute("innerText");
-                                ConsoleColors.DrawColor("DarkGray", $"Получили наименование товара: {VariablesForReport.tovName}");
+                            //foreach (IWebElement elm in tovNames)
+                            //{
+                            //    rowNum++;
+                            //    VariablesForReport.tovName = elm.GetAttribute("innerText");
+                            //    ConsoleColors.DrawColor("DarkGray", $"Получили наименование товара: {VariablesForReport.tovName}");
 
-                                JobWithExcel.ExcJob(1, colNum, Directory.GetCurrentDirectory() + @"\Urls\Discount_Report.xlsx", VariablesForReport.tovName);
-                            }
+                            //    //JobWithExcel.ExcJob(1, colNum, Directory.GetCurrentDirectory() + @"\Urls\Discount_Report.xlsx", VariablesForReport.tovName);
 
-                            colNum = 2;
+                            //    var query = $@"INSERT INTO `parser_report`(`product_name`) VALUES('{VariablesForReport.tovName}')";
+                            //    var command = new MySqlCommand(query, bdhelp.Connection);
+                            //    command.ExecuteNonQuery();
+                            //}
 
-                            foreach (IWebElement elm in elms)
-                            {
-                                rowNum++;
-                                VariablesForReport.tovPriceWithDiscount = elm.GetAttribute("innerText");
-                                ConsoleColors.DrawColor("DarkGray", $"Получили цену со скидкой: {VariablesForReport.tovPriceWithDiscount}");
+                            //colNum = 2;
+                            //int m = 0;
 
-                                VariablesForReport.tovPriceWithDiscount = VariablesForReport.tovPriceWithDiscount.Replace("₽", "");
+                            //foreach (IWebElement elm in elms)
+                            //{
+                            //    rowNum++;
+                            //    m++;
+                            //    VariablesForReport.tovPriceWithDiscount = elm.GetAttribute("innerText");
+                            //    ConsoleColors.DrawColor("DarkGray", $"Получили цену со скидкой: {VariablesForReport.tovPriceWithDiscount}");
 
-                                JobWithExcel.ExcJob(1, colNum, Directory.GetCurrentDirectory() + @"\Urls\Discount_Report.xlsx", VariablesForReport.tovPriceWithDiscount);
-                            }
+                            //    VariablesForReport.tovPriceWithDiscount = VariablesForReport.tovPriceWithDiscount.Replace("₽", "");
 
-                            colNum = 3;
+                            //    //JobWithExcel.ExcJob(1, colNum, Directory.GetCurrentDirectory() + @"\Urls\Discount_Report.xlsx", VariablesForReport.tovPriceWithDiscount);
+                            //    var query = $@"UPDATE `parser_report` SET `price_w_discount`='{VariablesForReport.tovPriceWithDiscount}' WHERE `Num` = {m}";
+                            //    var command = new MySqlCommand(query, bdhelp.Connection);
+                            //    command.ExecuteNonQuery();
+                            //}
 
-                            foreach (IWebElement elm in elmsWithoutDiscount)
-                            {
-                                rowNum++;
-                                VariablesForReport.tovPriceWithoutDiscount = elm.GetAttribute("innerText");
-                                ConsoleColors.DrawColor("DarkGray", $"Получили цену без скидки: {VariablesForReport.tovPriceWithoutDiscount}");
+                            //colNum = 3;
 
-                                VariablesForReport.tovPriceWithoutDiscount = VariablesForReport.tovPriceWithoutDiscount.Replace("₽", "");
+                            //foreach (IWebElement elm in elmsWithoutDiscount)
+                            //{
+                            //    rowNum++;
+                            //    i++;
+                            //    VariablesForReport.tovPriceWithoutDiscount = elm.GetAttribute("innerText");
+                            //    ConsoleColors.DrawColor("DarkGray", $"Получили цену без скидки: {VariablesForReport.tovPriceWithoutDiscount}");
 
-                                JobWithExcel.ExcJob(1, colNum, Directory.GetCurrentDirectory() + @"\Urls\Discount_Report.xlsx", VariablesForReport.tovPriceWithoutDiscount);
-                            }
+                            //    VariablesForReport.tovPriceWithoutDiscount = VariablesForReport.tovPriceWithoutDiscount.Replace("₽", "");
 
-                            colNum = 4;
+                            //    //JobWithExcel.ExcJob(1, colNum, Directory.GetCurrentDirectory() + @"\Urls\Discount_Report.xlsx", VariablesForReport.tovPriceWithoutDiscount);
+                            //    var query = $@"UPDATE `parser_report` SET `price_without_discount`='{VariablesForReport.tovPriceWithoutDiscount}' WHERE `Num` = {m}";
+                            //    var command = new MySqlCommand(query, bdhelp.Connection);
+                            //    command.ExecuteNonQuery();
+                            //}
 
-                            foreach (IWebElement elm in cardNums)
-                            {
-                                rowNum++;
-                                VariablesForReport.cardNum = elm.GetAttribute("data-popup-nm-id");
-                                ConsoleColors.DrawColor("DarkGray", $"Получили артикул товара: {VariablesForReport.cardNum}");
+                            //colNum = 4;
 
-                                JobWithExcel.ExcJob(1, colNum, Directory.GetCurrentDirectory() + @"\Urls\Discount_Report.xlsx", VariablesForReport.cardNum);
-                            }
+                            //foreach (IWebElement elm in cardNums)
+                            //{
+                            //    rowNum++;
+                            //    m++;
+                            //    VariablesForReport.cardNum = elm.GetAttribute("data-popup-nm-id");
+                            //    ConsoleColors.DrawColor("DarkGray", $"Получили артикул товара: {VariablesForReport.cardNum}");
+
+                            //    //JobWithExcel.ExcJob(1, colNum, Directory.GetCurrentDirectory() + @"\Urls\Discount_Report.xlsx", VariablesForReport.cardNum);
+                            //    var query = $@"UPDATE `parser_report` SET `vendor_code`='{VariablesForReport.cardNum}' WHERE `Num` = {m}";
+                            //    var command = new MySqlCommand(query, bdhelp.Connection);
+                            //    command.ExecuteNonQuery();
+                            //}
 
                             //driver.Close();
                         }

@@ -5,7 +5,7 @@ namespace WB_parser.DataBase
     public class DbHelper
     {
         private const string Server = "37.140.192.191";
-        private const string DatabaseName = "u1486803_WB_pars_db";
+        private const string DatabaseName = "u1486803_wb_pars_db";
         private const string UserName = "u1486803_wb_pr";
         private const string Password = "xF6nD1tE4tcO9d";
 

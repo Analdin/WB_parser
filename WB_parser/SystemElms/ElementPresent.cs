@@ -1,7 +1,7 @@
 ﻿using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 
-namespace WB_parser.System
+namespace WB_parser.SystemElms
 {
     public class ElementPresent
     {
