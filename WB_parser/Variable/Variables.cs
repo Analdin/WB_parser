@@ -13,6 +13,7 @@ namespace WB_parser.Variable
         public static string priceChoose { get; set; }
         public static string discountSet { get; set; }
         public static string rowData { get; set; }
+        public static string cardNumId { get; set; }
     }
 
     public class VariablesForReport

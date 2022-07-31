@@ -71,9 +71,10 @@ namespace MainJob
                                     {
                                         ConsoleColors.DrawColor("Cyan", $"Пароль и логин - верные, запускаем парсинг..");
                                         Thread.Sleep(500);
-                                        //Console.Clear();
+
                                         //Работа парсера
                                         ConsoleColors.DrawColor("Cyan", $"Парсинг сайта запущен..");
+                                        //Console.Clear();
 
                                         //Запрос к wildberries
                                         var request = new GetRequest("https://www.wildberries.ru/");                                     

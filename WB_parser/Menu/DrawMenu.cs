@@ -5,10 +5,10 @@
         /// <summary>
         /// Отрисовка меню в консоли
         /// </summary>
-        /// <param name="items">Элементы</param>
-        /// <param name="row">Строка</param>
-        /// <param name="col">Колонка</param>
-        /// <param name="index">Номер</param>
+        /// <param name="items"> Элементы</param>
+        /// <param name="row"> Строка</param>
+        /// <param name="col"> Колонка</param>
+        /// <param name="index"> Номер</param>
         public static void DrawMainMenu(string[] items, int row, int col, int index)
         {
             Console.SetCursorPosition(col, row);
