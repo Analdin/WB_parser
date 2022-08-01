@@ -197,7 +197,7 @@ namespace WB_parser.Parsing.AllPages
 
                         Thread.Sleep(5000);
 
-                        for(int i = 0; i < 3; i++)
+                        for (int i = 0; i < 3; i++)
                         {
                             Actions actions = new Actions(driver);
                             actions.SendKeys(Keys.PageDown).Build().Perform();
@@ -238,6 +238,7 @@ namespace WB_parser.Parsing.AllPages
                                 try
                                 {
                                     VariablesForReport.tovPriceWithDiscount = elm.FindElement(By.XPath(".//span[contains(@class, 'price')]/ins[contains(@class, 'lower-price')]|.//p[contains(@class, 'goods-card__price')]/span")).Text;
+                                    VariablesForReport.tovPriceWithDiscount = System.Text.RegularExpressions.Regex.Replace(VariablesForReport.tovPriceWithDiscount, @"[^\d]", "");
                                     ConsoleColors.DrawColor("DarkGray", $"Цена со скидкой: {VariablesForReport.tovPriceWithDiscount}");
                                 }
                                 catch (NoSuchElementException ex)
@@ -248,22 +249,28 @@ namespace WB_parser.Parsing.AllPages
                                 try
                                 {
                                     VariablesForReport.tovPriceWithoutDiscount = elm.FindElement(By.XPath(".//div[contains(@class, 'goods-card__info')]/p/span//following-sibling::del|.//del[contains(@class, 'goods-card__price-last')]|.//span[contains(@class, 'price-old-block')]/del")).Text;
-                                    ConsoleColors.DrawColor("DarkGray", $"Цена без скидки: {VariablesForReport.tovPriceWithoutDiscount}");
+                                    VariablesForReport.tovPriceWithoutDiscount = System.Text.RegularExpressions.Regex.Replace(VariablesForReport.tovPriceWithoutDiscount, @"[^\d]", "");
+                                    //ConsoleColors.DrawColor("DarkGray", $"Цена без скидки: {VariablesForReport.tovPriceWithoutDiscount}");
                                 }
                                 catch (NoSuchElementException ex)
                                 {
-                                    ConsoleColors.DrawColor("DarkGray", $"Элемент не найден: {ex.Message}");
+                                    //ConsoleColors.DrawColor("DarkGray", $"Элемент не найден: {ex.Message}");
+                                    VariablesForReport.tovPriceWithoutDiscount = "";
                                 }
+                                ConsoleColors.DrawColor("DarkGray", $"Цена без скидки: {VariablesForReport.tovPriceWithoutDiscount}");
 
                                 try
                                 {
                                     //string pattern = @"(?<=catalog/).*(?=/detail\.aspx)";
-                                    string pattern = @"(?<=00/).*(?=-1\.jpg)";
-                                    VariablesForReport.cardNum = elm.FindElement(By.XPath(".//div[contains(@class, 'goods-card__container')]/div/img")).GetAttribute("src");
+                                    //string pattern = @"(?<=00/).*(?=-1\.jpg)";
+                                    //var curCardWE = elm.FindElement(By.XPath(".//div[contains(@class, 'goods-card__container')]/div/img"));
+                                    //(new Actions(driver)).MoveToElement(curCardWE).Perform();
+                                    //VariablesForReport.cardNum = curCardWE.GetAttribute("src");
                                     //ConsoleColors.DrawColor("DarkGray", $"src: {VariablesForReport.cardNum}");
                                     //div[contains(@class, 'goods-card__container')]/div/img
                                     //li[contains(@class, 'recently-watched__item')]/a|.//a[contains(@class, 'product-card__main')]|.//li[contains(@class, 'j-product-item')]/a
-                                    Variables.cardNumId = System.Text.RegularExpressions.Regex.Match(VariablesForReport.cardNum, pattern).ToString();
+                                    //Variables.cardNumId = System.Text.RegularExpressions.Regex.Match(VariablesForReport.cardNum, pattern).ToString();
+                                    Variables.cardNumId = elm.GetAttribute("data-popup-nm-id");
                                     ConsoleColors.DrawColor("DarkGray", $"Id товара: {Variables.cardNumId}");
                                 }
                                 catch (NoSuchElementException ex)
@@ -271,7 +278,7 @@ namespace WB_parser.Parsing.AllPages
                                     ConsoleColors.DrawColor("DarkGray", $"Элемент не найден: {ex.Message}");
                                 }
 
-                                var query = $@"INSERT INTO `parser_report`(`product_name`) VALUES('{VariablesForReport.tovName}')";
+                                var query = $"INSERT INTO `parser_report`(`product_name`) VALUES(\"{VariablesForReport.tovName}\")";
                                 var command = new MySqlCommand(query, bdhelp.Connection);
                                 command.ExecuteNonQuery();
 
