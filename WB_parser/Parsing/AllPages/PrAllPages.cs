@@ -278,7 +278,7 @@ namespace WB_parser.Parsing.AllPages
                                     ConsoleColors.DrawColor("DarkGray", $"Элемент не найден: {ex.Message}");
                                 }
 
-                                var query = $"INSERT INTO `parser_report`(`product_name`) VALUES(\"{VariablesForReport.tovName}\")";
+                                var query = $"INSERT INTO `parser_report`(`product_name`) VALUES('{VariablesForReport.tovName.Replace('\'', '"')}')";
                                 var command = new MySqlCommand(query, bdhelp.Connection);
                                 command.ExecuteNonQuery();
 
