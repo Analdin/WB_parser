@@ -241,7 +241,7 @@ namespace WB_parser.Parsing.AllPages
 
                             while (true)
                             {
-                                List<IWebElement> allElms = driver.FindElements(By.XPath("//li[contains(@class, 'j-product-item')]|//div[contains(@class, 'product-card__wrapper')]")).ToList();
+                                List<IWebElement> allElms = driver.FindElements(By.XPath("//li[contains(@class, 'j-product-item')]|//div[contains(@class, 'j-card-item')]")).ToList();
 
                                 ConsoleColors.DrawColor("DarkGray", $"allElms: {allElms.Count}");
                                 mn++;
@@ -331,44 +331,31 @@ namespace WB_parser.Parsing.AllPages
                                         inputKey = char.ToLower(Console.ReadKey(true).KeyChar);
                                     if (bdRowCount < 2)
                                     {
-                                        var query = $"INSERT INTO `parser_report`(`product_name`) VALUES('{VariablesForReport.tovName.Replace('\'', '"')}')";
+                                        var query = $"INSERT INTO `parser_report`(`product_name`, `price_w_discount`, `price_without_discount`, `vendor_code`, `difference`)" +
+                                            $" VALUES('{VariablesForReport.tovName.Replace('\'', '"')}', '{VariablesForReport.tovPriceWithDiscount}', '{VariablesForReport.tovPriceWithoutDiscount}'," +
+                                            $"'{Variables.cardNumId}', {(tovPriceWithoutDiscount != -1 && tovPriceWithDiscount != -1 ? tovPriceWithoutDiscount - tovPriceWithDiscount : 0)})";
                                         var command = new MySqlCommand(query, bdhelp.Connection);
                                         command.ExecuteNonQuery();
-
-                                        var query1 = $@"UPDATE `parser_report` SET `price_w_discount`='{VariablesForReport.tovPriceWithDiscount}' WHERE `Num` = {m}";
-                                        var command1 = new MySqlCommand(query1, bdhelp.Connection);
-                                        command1.ExecuteNonQuery();
-
-                                        var query2 = $@"UPDATE `parser_report` SET `price_without_discount`='{VariablesForReport.tovPriceWithoutDiscount}' WHERE `Num` = {m}";
-                                        var command2 = new MySqlCommand(query2, bdhelp.Connection);
-                                        command2.ExecuteNonQuery();
-
-                                        var query3 = $@"UPDATE `parser_report` SET `vendor_code`='{Variables.cardNumId}' WHERE `Num` = {m}";
-                                        var command3 = new MySqlCommand(query3, bdhelp.Connection);
-                                        command3.ExecuteNonQuery();
-
-                                        if (tovPriceWithoutDiscount != -1 && tovPriceWithDiscount != -1)
-                                        {
-                                            var query4 = $@"UPDATE `parser_report` SET `difference`='{tovPriceWithoutDiscount - tovPriceWithDiscount}' WHERE `Num` = {m}";
-                                            var command4 = new MySqlCommand(query4, bdhelp.Connection);
-                                            command4.ExecuteNonQuery();
-                                        }
                                     }
                                     else
                                     {
                                         int tovPriceWithDiscount_Old;
-                                        var query0 = $"SELECT `price_w_discount` FROM `parser_report` WHERE `vendor_code` = {Variables.cardNumId}";
+                                        var query0 = $"SELECT `price_w_discount` FROM `parser_report` WHERE `vendor_code` = '{Variables.cardNumId}'";
                                         var command0 = new MySqlCommand(query0, bdhelp.Connection);
                                         var scalar1 = command0.ExecuteScalar();
                                         if (scalar1 == null || !int.TryParse(scalar1.ToString(), out tovPriceWithDiscount_Old))
                                             tovPriceWithDiscount_Old = -1;
                                         if (scalar1 != null)
-                                            if (tovPriceWithDiscount != -1 && tovPriceWithDiscount_Old != -1 && tovPriceWithDiscount != tovPriceWithDiscount_Old)
+                                            if (tovPriceWithDiscount != -1 && tovPriceWithDiscount_Old != -1)
                                             {
-                                                var query5 = $@"UPDATE `parser_report` SET `{(tovPriceWithDiscount < tovPriceWithDiscount_Old ? "price_lower" : "price_higher")}`='
-                                                {Math.Abs(tovPriceWithDiscount - tovPriceWithDiscount_Old).ToString()}' WHERE `vendor_code` = {Variables.cardNumId}";
+                                                var query5 = $@"UPDATE `parser_report` SET `price_lower`='
+                                                    {(tovPriceWithDiscount < tovPriceWithDiscount_Old ? tovPriceWithDiscount_Old - tovPriceWithDiscount : 0)}' WHERE `vendor_code` = '{Variables.cardNumId}'";
                                                 var command5 = new MySqlCommand(query5, bdhelp.Connection);
                                                 command5.ExecuteNonQuery();
+                                                var query6 = $@"UPDATE `parser_report` SET `price_higher`='
+                                                    {(tovPriceWithDiscount > tovPriceWithDiscount_Old ? tovPriceWithDiscount - tovPriceWithDiscount_Old : 0)}' WHERE `vendor_code` = '{Variables.cardNumId}'";
+                                                var command6 = new MySqlCommand(query6, bdhelp.Connection);
+                                                command6.ExecuteNonQuery();
                                             }
                                     }
                                     if (Console.KeyAvailable)
