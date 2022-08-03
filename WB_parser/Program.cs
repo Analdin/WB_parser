@@ -4,6 +4,7 @@ using WB_parser.Parsing;
 using WB_parser.Parsing.AllPages;
 using WB_parser.Color;
 using WB_parser.Variable;
+using WB_parser.TelegramJob;
 
 namespace MainJob
 {
@@ -11,19 +12,21 @@ namespace MainJob
     {
         public static bool statusOfLogin { get; set; } = false;
         public static string timeStart { get; set; }
-        public static string timeEnd { get; set;}
+        public static string timeEnd { get; set; }
 
         static void Main(string[] args)
         {
 
             string[] menuItems = new string[] { "Логин", "Парсинг", "Категория: выбор", "Подкатегория: выбор", "Цена: выбор", "Уровень скидки", "Период", "Выход" };
 
-            Console.WriteLine("Меню");
-            Console.WriteLine();
-
             int row = Console.CursorTop;
             int col = Console.CursorLeft;
             int index = 0;
+
+            TelegramSendCard.BotStart();
+
+            Console.WriteLine("Меню");
+            Console.WriteLine();
 
             while (true)
             {
@@ -35,7 +38,7 @@ namespace MainJob
                             index++;
                         break;
                     case ConsoleKey.UpArrow:
-                        if(index > 0)
+                        if (index > 0)
                             index--;
                         break;
                     case ConsoleKey.Enter:
@@ -63,7 +66,7 @@ namespace MainJob
                                 Console.Write("Запустить парсинг ? (Y/N)");
                                 string str = Console.ReadLine();
 
-                                if(str == "Y")
+                                if (str == "Y")
                                 {
                                     ConsoleColors.DrawColor("Cyan", $"Проверяем логин и пароль для входа..");
 
@@ -77,7 +80,7 @@ namespace MainJob
                                         //Console.Clear();
 
                                         //Запрос к wildberries
-                                        var request = new GetRequest("https://www.wildberries.ru/");                                     
+                                        var request = new GetRequest("https://www.wildberries.ru/");
                                         request.Run();
 
                                         ConsoleColors.DrawColor("Cyan", $"Сбор url запущен..");
@@ -137,7 +140,7 @@ namespace MainJob
                                     ConsoleColors.DrawColor("DarkGray", $"Введите начальную дату.");
                                     timeStart = Console.ReadLine();
 
-                                    if(timeStart.Length > 10)
+                                    if (timeStart.Length > 10)
                                     {
                                         ConsoleColors.DrawColor("Red", $"Введите верный формат начальной даты (пример: 01.06.2022)");
                                     }
@@ -160,7 +163,7 @@ namespace MainJob
 
                                     ConsoleColors.DrawColor("Green", $"Установите размер скидки, если не нужно, нажмите Enter. (Устанавливается без знака '%')");
                                     Variables.discountSet = Console.ReadLine();
-                                    if(String.IsNullOrWhiteSpace(Variables.discountSet))
+                                    if (String.IsNullOrWhiteSpace(Variables.discountSet))
                                     {
                                         ConsoleColors.DrawColor("DarkGray", $"Установка скидки пропущена: {Variables.discountSet}");
                                         goto case 1;

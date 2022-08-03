@@ -10,6 +10,7 @@ using OpenQA.Selenium.Interactions;
 using WB_parser.DataBase;
 using MySql.Data.MySqlClient;
 using WB_parser.SystemElms;
+using WB_parser.TelegramJob;
 
 namespace WB_parser.Parsing.AllPages
 {
@@ -45,6 +46,7 @@ namespace WB_parser.Parsing.AllPages
         /// </summary>
         public async void ParserRun()
         {
+
             try
             {
                 DbHelper bdhelp = new DbHelper();
@@ -348,14 +350,17 @@ namespace WB_parser.Parsing.AllPages
                                         if (scalar1 != null)
                                             if (tovPriceWithDiscount != -1 && tovPriceWithDiscount_Old != -1)
                                             {
+                                                int difference = tovPriceWithDiscount - tovPriceWithDiscount_Old;
                                                 var query5 = $@"UPDATE `parser_report` SET `price_lower`='
-                                                    {(tovPriceWithDiscount < tovPriceWithDiscount_Old ? tovPriceWithDiscount_Old - tovPriceWithDiscount : 0)}' WHERE `vendor_code` = '{Variables.cardNumId}'";
+                                                    {(difference < 0 ? -difference : 0)}' WHERE `vendor_code` = '{Variables.cardNumId}'";
                                                 var command5 = new MySqlCommand(query5, bdhelp.Connection);
                                                 command5.ExecuteNonQuery();
                                                 var query6 = $@"UPDATE `parser_report` SET `price_higher`='
-                                                    {(tovPriceWithDiscount > tovPriceWithDiscount_Old ? tovPriceWithDiscount - tovPriceWithDiscount_Old : 0)}' WHERE `vendor_code` = '{Variables.cardNumId}'";
+                                                    {(difference > 0 ? difference : 0)}' WHERE `vendor_code` = '{Variables.cardNumId}'";
                                                 var command6 = new MySqlCommand(query6, bdhelp.Connection);
                                                 command6.ExecuteNonQuery();
+                                                if (difference != 0)
+                                                    TelegramSendCard.SendMessages(VariablesForReport.tovName, difference, Variables.cardNumId);
                                             }
                                     }
                                     if (Console.KeyAvailable)
