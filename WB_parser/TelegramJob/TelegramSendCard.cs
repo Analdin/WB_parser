@@ -77,12 +77,12 @@ namespace WB_parser.TelegramJob
             }
         }
 
-        public static async void SendMessages(string name, int difference, string vendor_code)
+        public static async void SendMessages(string name, string difference, string vendor_code, string url)
         {
             foreach (var userId in userLstnrList)
             {
-                await bot.SendTextMessageAsync(userId, $"Цена по товару {name} ({vendor_code}) {(difference > 0 ? "повысилась" : "понизилась")} на {Math.Abs(difference)}" +
-                    $"\n{DateTime.Now.ToString("g")}");
+                await bot.SendTextMessageAsync(userId, $"Цена по товару {name} ({vendor_code}) {(difference[0] == '-' ? "понизилась" : "повысилась")} на " +
+                    $"{difference.Replace("-", "")}\n{url}\n{DateTime.Now.ToString("g")}");
             }
         }
     }

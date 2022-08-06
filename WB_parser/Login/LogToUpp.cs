@@ -22,7 +22,7 @@ namespace WB_parser.Login
                 {
                     ConsoleColors.DrawColor("Green", $"Успешный вход! Работаем..");
                     Thread.Sleep(500);
-                    Console.Clear();
+                    ConsoleColors.Clear();
                 }
                 else
                 {
@@ -50,7 +50,7 @@ namespace WB_parser.Login
             public bool UserPassed()
             {
                 var result = false;
-                for(int i = 0; i < count; i++)
+                for (int i = 0; i < count; i++)
                 {
                     if (verboseDiff.IsAttemptCorrect())
                     {

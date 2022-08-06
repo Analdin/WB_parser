@@ -24,12 +24,14 @@ namespace WB_parser.Parsing.AllPages
             //var input = char.ToLower(Console.ReadKey(true).KeyChar);
             if (input == 'p' || input == 'з')
             {
-                ConsoleColors.DrawColor("DarkGray", "Программа остановлена для продолжения нажмите Enter");
+                ConsoleColors.DrawColor("Cyan", "Программа остановлена для продолжения нажмите Enter");
                 Console.ReadLine();
             }
             else if (input == 'm' || input == 'ь')
             {
-                Console.Clear();
+                ConsoleColors.DrawColor("Green", $"Выход в меню");
+                Thread.Sleep(500);
+                ConsoleColors.Clear();
                 return true;
             }
             return false;
@@ -44,7 +46,7 @@ namespace WB_parser.Parsing.AllPages
         /// <summary>
         /// Работа парсера, в конце запись полученных данных в таблицу
         /// </summary>
-        public async void ParserRun()
+        public async Task ParserRun()
         {
 
             try
@@ -224,25 +226,43 @@ namespace WB_parser.Parsing.AllPages
 
                             driver.Navigate().GoToUrl(line);
 
-                            Thread.Sleep(5000);
-
-                            for (int i = 0; i < 3; i++)
-                            {
-                                Actions actions = new Actions(driver);
-                                actions.SendKeys(Keys.PageDown).Build().Perform();
-
-                                Thread.Sleep(2000);
-                            }
-
                             int mn = 0;
                             int m = 0;
 
+                            Thread.Sleep(5000);
+
+                            List<IWebElement> headerList = driver.FindElements(By.XPath("//ul[contains(@class, 'breadcrumbs__list')]/li/a/span|//ul[contains(@class, 'breadcrumbs__list')]/li/span")).ToList();
+                            string category = "", subcategory = "";
+                            if (Variables.category != "")
+                            {
+                                if (headerList != null)
+                                {
+                                    if (headerList.Count > 1)
+                                        category = headerList[1].Text;
+                                    if (headerList.Count > 2)
+                                        subcategory = headerList[2].Text;
+                                    if (category == "")
+                                        ConsoleColors.DrawColor("Red", $"Заголовок не найден");
+                                }
+                                else
+                                    ConsoleColors.DrawColor("Red", $"Заголовки не найдены");
+                            }
+
                             char inputKey = '_';
+
+                            int curePage = 0;
 
                             // Парсим контейнеры, внутри то что нужно по товарам
 
                             while (true)
                             {
+                                for (int i = 0; i < 3; i++)
+                                {
+                                    Actions actions = new Actions(driver);
+                                    actions.SendKeys(Keys.PageDown).Build().Perform();
+
+                                    Thread.Sleep(2000);
+                                }
                                 List<IWebElement> allElms = driver.FindElements(By.XPath("//li[contains(@class, 'j-product-item')]|//div[contains(@class, 'j-card-item')]")).ToList();
 
                                 ConsoleColors.DrawColor("DarkGray", $"allElms: {allElms.Count}");
@@ -273,7 +293,7 @@ namespace WB_parser.Parsing.AllPages
 
                                     try
                                     {
-                                        VariablesForReport.tovPriceWithDiscount = elm.FindElement(By.XPath(".//span[contains(@class, 'price')]/ins[contains(@class, 'lower-price')]|.//p[contains(@class, 'goods-card__price')]/span")).Text;
+                                        VariablesForReport.tovPriceWithDiscount = elm.FindElement(By.XPath(".//span[contains(@class, 'price')]/ins[contains(@class, 'lower-price')]|.//span[contains(@class, 'price')]/span[contains(@class, 'lower-price')]|.//p[contains(@class, 'goods-card__price')]/span")).Text;
                                         VariablesForReport.tovPriceWithDiscount = System.Text.RegularExpressions.Regex.Replace(VariablesForReport.tovPriceWithDiscount, @"[^\d]", "");
                                         ConsoleColors.DrawColor("DarkGray", $"Цена со скидкой: {VariablesForReport.tovPriceWithDiscount}");
                                     }
@@ -316,6 +336,15 @@ namespace WB_parser.Parsing.AllPages
                                         ConsoleColors.DrawColor("DarkGray", $"Элемент не найден: {ex.Message}");
                                     }
 
+                                    try
+                                    {
+                                        VariablesForReport.discount = elm.FindElement(By.XPath(".//p[contains(@class, 'goods-card__discount')]|.//span[contains(@class, 'product-card__sale')]")).Text.Replace("-", "").Replace("%", "").Trim();
+                                    }
+                                    catch (NoSuchElementException ex)
+                                    {
+                                        VariablesForReport.discount = "0";
+                                    }
+
                                     if (bdhelp.Connection.State == System.Data.ConnectionState.Closed)
                                         bdhelp.OpenConnection();
 
@@ -333,41 +362,69 @@ namespace WB_parser.Parsing.AllPages
                                         inputKey = char.ToLower(Console.ReadKey(true).KeyChar);
                                     if (bdRowCount < 2)
                                     {
-                                        var query = $"INSERT INTO `parser_report`(`product_name`, `price_w_discount`, `price_without_discount`, `vendor_code`, `difference`)" +
-                                            $" VALUES('{VariablesForReport.tovName.Replace('\'', '"')}', '{VariablesForReport.tovPriceWithDiscount}', '{VariablesForReport.tovPriceWithoutDiscount}'," +
-                                            $"'{Variables.cardNumId}', {(tovPriceWithoutDiscount != -1 && tovPriceWithDiscount != -1 ? tovPriceWithoutDiscount - tovPriceWithDiscount : 0)})";
+                                        var query = $"INSERT INTO `parser_report`(`product_name`, `price_w_discount`, `price_without_discount`, `category`, `subcategory`, `vendor_code`, " +
+                                            $"`difference`) VALUES('{VariablesForReport.tovName.Replace('\'', '"')}', '{VariablesForReport.tovPriceWithDiscount}', " +
+                                            $"'{VariablesForReport.tovPriceWithoutDiscount}', '{Variables.category}', '{Variables.subCategory}', '{Variables.cardNumId}', " +
+                                            $"{(tovPriceWithoutDiscount != -1 && tovPriceWithDiscount != -1 ? tovPriceWithoutDiscount - tovPriceWithDiscount : 0)})";
                                         var command = new MySqlCommand(query, bdhelp.Connection);
                                         command.ExecuteNonQuery();
                                     }
                                     else
                                     {
-                                        int tovPriceWithDiscount_Old;
-                                        var query0 = $"SELECT `price_w_discount` FROM `parser_report` WHERE `vendor_code` = '{Variables.cardNumId}'";
-                                        var command0 = new MySqlCommand(query0, bdhelp.Connection);
-                                        var scalar1 = command0.ExecuteScalar();
-                                        if (scalar1 == null || !int.TryParse(scalar1.ToString(), out tovPriceWithDiscount_Old))
-                                            tovPriceWithDiscount_Old = -1;
-                                        if (scalar1 != null)
-                                            if (tovPriceWithDiscount != -1 && tovPriceWithDiscount_Old != -1)
-                                            {
-                                                int difference = tovPriceWithDiscount - tovPriceWithDiscount_Old;
-                                                var query5 = $@"UPDATE `parser_report` SET `price_lower`='
-                                                    {(difference < 0 ? -difference : 0)}' WHERE `vendor_code` = '{Variables.cardNumId}'";
-                                                var command5 = new MySqlCommand(query5, bdhelp.Connection);
-                                                command5.ExecuteNonQuery();
-                                                var query6 = $@"UPDATE `parser_report` SET `price_higher`='
-                                                    {(difference > 0 ? difference : 0)}' WHERE `vendor_code` = '{Variables.cardNumId}'";
-                                                var command6 = new MySqlCommand(query6, bdhelp.Connection);
-                                                command6.ExecuteNonQuery();
-                                                if (difference != 0)
-                                                    TelegramSendCard.SendMessages(VariablesForReport.tovName, difference, Variables.cardNumId);
-                                            }
+                                        int discountStart = -1, discountEnd = -1, discountDeclared;
+                                        if (Variables.discountSet != "")
+                                        {
+                                            var discountArray = Variables.discountSet.Trim().Split('-');
+                                            if (discountArray.Length != 2 || !int.TryParse(discountArray[0], out discountStart) || !int.TryParse(discountArray[1], out discountEnd))
+                                                discountStart = discountEnd = -1;
+                                        }
+
+                                        if (!int.TryParse(VariablesForReport.discount, out discountDeclared))
+                                            discountDeclared = 0;
+                                        if ((Variables.category.ToLower() == "" || (category.ToLower() == Variables.category.ToLower() &&
+                                            (Variables.subCategory.ToLower() == "" || subcategory.ToLower() == Variables.subCategory.ToLower())))
+                                            && (discountStart == -1 || (discountStart <= discountDeclared && discountDeclared <= discountEnd)))
+                                        {
+                                            int tovPriceWithDiscount_Old;
+                                            var query0 = $"SELECT `price_w_discount` FROM `parser_report` WHERE `vendor_code` = '{Variables.cardNumId}'";
+                                            var command0 = new MySqlCommand(query0, bdhelp.Connection);
+                                            var scalar1 = command0.ExecuteScalar();
+                                            if (scalar1 == null || !int.TryParse(scalar1.ToString(), out tovPriceWithDiscount_Old))
+                                                tovPriceWithDiscount_Old = -1;
+                                            if (scalar1 != null)
+                                                if (tovPriceWithDiscount != -1 && tovPriceWithDiscount_Old != -1)
+                                                {
+                                                    int difference = tovPriceWithDiscount - tovPriceWithDiscount_Old;
+                                                    int differencePercent = difference * 100 / tovPriceWithDiscount_Old;
+                                                    var query2 = $@"UPDATE `parser_report` SET `price_lower`='{(difference < 0 ? -difference : 0)}', `price_higher`='
+                                                        {(difference > 0 ? difference : 0)}', `percent`={differencePercent} WHERE `vendor_code` = '{Variables.cardNumId}'";
+                                                    var command2 = new MySqlCommand(query2, bdhelp.Connection);
+                                                    command2.ExecuteNonQuery();
+
+                                                    string productUrl = @$"https://www.wildberries.ru/catalog/{Variables.cardNumId}/detail.aspx";
+                                                    if (difference != 0)
+                                                        TelegramSendCard.SendMessages(VariablesForReport.tovName, Variables.isPersent ? differencePercent.ToString() + '%' :
+                                                            difference.ToString(), Variables.cardNumId, productUrl);
+                                                }
+                                        }
                                     }
                                     if (Console.KeyAvailable)
                                         inputKey = char.ToLower(Console.ReadKey(true).KeyChar);
                                 }
 
-                                if (m >= allElms.Count)
+
+                                try
+                                {
+                                    // Пагинация
+                                    if (++curePage < Variables.paginationMax)
+                                    {
+                                        IWebElement nextPage = driver.FindElement(By.XPath("//a[contains(@class, 'pagination-next pagination__next')]"));
+                                        driver.Navigate().GoToUrl(nextPage.GetAttribute("href"));
+                                    }
+                                    else
+                                        throw new Exception();
+                                }
+                                catch
                                 {
                                     ConsoleColors.DrawColor("DarkGray", $"m >= allElms.Count: {m}");
                                     bdhelp.CloseConnection();

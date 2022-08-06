@@ -16,11 +16,9 @@ namespace MainJob
 
         static void Main(string[] args)
         {
+            string menuIsNumberStr = "Отображение: значением", menuIsPercentStr = "Отображение: процентом";
+            string[] menuItems = new string[] { "Логин", "Парсинг", "Категория: выбор", "Подкатегория: выбор", "Цена: выбор", "Уровень скидки", "Период", "Количество страниц", menuIsNumberStr, "Выход" };
 
-            string[] menuItems = new string[] { "Логин", "Парсинг", "Категория: выбор", "Подкатегория: выбор", "Цена: выбор", "Уровень скидки", "Период", "Выход" };
-
-            int row = Console.CursorTop;
-            int col = Console.CursorLeft;
             int index = 0;
 
             TelegramSendCard.BotStart();
@@ -30,7 +28,8 @@ namespace MainJob
 
             while (true)
             {
-                DrawMenu.DrawMainMenu(menuItems, row, col, index);
+                DrawMenu.DrawMainMenu(menuItems, 0, 0, index);
+                ConsoleColors.SaveCursorPosition(true);
                 switch (Console.ReadKey(true).Key)
                 {
                     case ConsoleKey.DownArrow:
@@ -42,6 +41,7 @@ namespace MainJob
                             index--;
                         break;
                     case ConsoleKey.Enter:
+                        ConsoleColors.SetActualCursorPosition();
                         switch (index)
                         {
                             case 0:
@@ -61,7 +61,7 @@ namespace MainJob
 
                                 statusOfLogin = true;
 
-                                break;
+                                continue;
                             case 1:
                                 Console.Write("Запустить парсинг ? (Y/N)");
                                 string str = Console.ReadLine();
@@ -86,9 +86,10 @@ namespace MainJob
                                         ConsoleColors.DrawColor("Cyan", $"Сбор url запущен..");
 
                                         var parsePages = new HtmlCodeGet(request.ToString(), @"\Urls\allUrls.txt");
-                                        parsePages.ParserRun();
+                                        parsePages.ParserRun().Wait();
 
                                         ConsoleColors.DrawColor("Cyan", $"Сбор url закончен.");
+                                        ConsoleColors.DrawColor("Cyan", $"Парсинг сайта завершён..");
 
                                         Thread.Sleep(500);
                                         //Console.Clear();
@@ -106,7 +107,7 @@ namespace MainJob
                                 else
                                 {
                                     ConsoleColors.DrawColor("Cyan", $"Отменяем парсинг..");
-                                    goto default;
+                                    break;
                                 }
                             case 2:
                                 ConsoleColors.DrawColor("Cyan", $"Введите категорию товара..");
@@ -129,6 +130,11 @@ namespace MainJob
 
                                 goto case 5;
                             case 5:
+                                ConsoleColors.DrawColor("Cyan", $"Установите диапазон размера скидки, устанавливается без знака '%' (пример 20-30)");
+                                Variables.discountSet = Console.ReadLine();
+                                ConsoleColors.DrawColor("DarkGray", $"Установлен диапазон скидки: {Variables.discountSet}");
+                                break;
+                            case 6:
                                 ConsoleColors.DrawColor("Cyan", $"Выберите период за который нужно собрать скидки. (Пример: 01.06.22 - 12.06.22)");
 
                                 ConsoleColors.DrawColor("Cyan", $"Проверяем логин и пароль для входа..");
@@ -160,19 +166,6 @@ namespace MainJob
                                     {
                                         ConsoleColors.DrawColor("DarkGray", $"Записана начальная дата: {timeEnd}");
                                     }
-
-                                    ConsoleColors.DrawColor("Green", $"Установите размер скидки, если не нужно, нажмите Enter. (Устанавливается без знака '%')");
-                                    Variables.discountSet = Console.ReadLine();
-                                    if (String.IsNullOrWhiteSpace(Variables.discountSet))
-                                    {
-                                        ConsoleColors.DrawColor("DarkGray", $"Установка скидки пропущена: {Variables.discountSet}");
-                                        goto case 1;
-                                    }
-                                    else
-                                    {
-                                        ConsoleColors.DrawColor("DarkGray", $"Установлена скидка: {Variables.discountSet}");
-                                        goto case 1;
-                                    }
                                 }
                                 else
                                 {
@@ -181,16 +174,33 @@ namespace MainJob
                                 }
 
                                 break;
-                            case 6:
-                                ConsoleColors.DrawColor("Cyan", $"Установка периода");
-                                return;
                             case 7:
+                                ConsoleColors.DrawColor("Cyan", $"Введите максимальное количество страниц на странице..");
+                                int paginationMax;
+                                if (int.TryParse(Console.ReadLine(), out paginationMax))
+                                {
+                                    Variables.paginationMax = paginationMax;
+                                    ConsoleColors.DrawColor("DarkGray", $"Записано максимальное количество страниц: {paginationMax}");
+                                }
+                                else
+                                    ConsoleColors.DrawColor("Red", $"Число введено неверно.");
+                                break;
+                            case 8:
+                                Variables.isPersent = !Variables.isPersent;
+                                menuItems[index] = Variables.isPersent ? menuIsPercentStr : menuIsNumberStr;
+                                break;
+                            case 9:
                                 ConsoleColors.DrawColor("Cyan", $"Выбран выход из приложения");
                                 return;
                             default:
-                                ConsoleColors.DrawColor("Cyan", $"Выбран пункт {menuItems[index]}");
-                                break;
+                                //ConsoleColors.DrawColor("Cyan", $"Выбран пункт {menuItems[index]}");
+                                //break;
+                                ConsoleColors.DrawColor("Cyan", $"Для выхода в меню нажмите Enter..");
+                                Console.ReadLine();
+                                ConsoleColors.Clear();
+                                continue;
                         }
+                        ConsoleColors.SaveCursorPosition();
                         break;
                 }
             }
