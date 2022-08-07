@@ -233,20 +233,17 @@ namespace WB_parser.Parsing.AllPages
 
                             List<IWebElement> headerList = driver.FindElements(By.XPath("//ul[contains(@class, 'breadcrumbs__list')]/li/a/span|//ul[contains(@class, 'breadcrumbs__list')]/li/span")).ToList();
                             string category = "", subcategory = "";
-                            if (Variables.category != "")
+                            if (headerList != null)
                             {
-                                if (headerList != null)
-                                {
-                                    if (headerList.Count > 1)
-                                        category = headerList[1].Text;
-                                    if (headerList.Count > 2)
-                                        subcategory = headerList[2].Text;
-                                    if (category == "")
-                                        ConsoleColors.DrawColor("Red", $"Заголовок не найден");
-                                }
-                                else
-                                    ConsoleColors.DrawColor("Red", $"Заголовки не найдены");
+                                if (headerList.Count > 1)
+                                    category = headerList[1].Text;
+                                if (headerList.Count > 2)
+                                    subcategory = headerList[2].Text;
+                                if (category == "")
+                                    ConsoleColors.DrawColor("Red", $"Заголовок не найден");
                             }
+                            else
+                                ConsoleColors.DrawColor("Red", $"Заголовки не найдены");
 
                             char inputKey = '_';
 
@@ -363,8 +360,8 @@ namespace WB_parser.Parsing.AllPages
                                     if (bdRowCount < 2)
                                     {
                                         var query = $"INSERT INTO `parser_report`(`product_name`, `price_w_discount`, `price_without_discount`, `category`, `subcategory`, `vendor_code`, " +
-                                            $"`difference`) VALUES('{VariablesForReport.tovName.Replace('\'', '"')}', '{VariablesForReport.tovPriceWithDiscount}', " +
-                                            $"'{VariablesForReport.tovPriceWithoutDiscount}', '{Variables.category}', '{Variables.subCategory}', '{Variables.cardNumId}', " +
+                                            $"`difference`) VALUES('{VariablesForReport.tovName.Replace('\'', '"').Replace("`", "")}', '{VariablesForReport.tovPriceWithDiscount}', " +
+                                            $"'{VariablesForReport.tovPriceWithoutDiscount}', '{category}', '{subcategory}', '{Variables.cardNumId}', " +
                                             $"{(tovPriceWithoutDiscount != -1 && tovPriceWithDiscount != -1 ? tovPriceWithoutDiscount - tovPriceWithDiscount : 0)})";
                                         var command = new MySqlCommand(query, bdhelp.Connection);
                                         command.ExecuteNonQuery();
