@@ -229,7 +229,7 @@ namespace WB_parser.Parsing.AllPages
                             int mn = 0;
                             int m = 0;
 
-                            Thread.Sleep(5000);
+                            Thread.Sleep(10000);
 
                             List<IWebElement> headerList = driver.FindElements(By.XPath("//ul[contains(@class, 'breadcrumbs__list')]/li/a/span|//ul[contains(@class, 'breadcrumbs__list')]/li/span")).ToList();
                             string category = "", subcategory = "";
