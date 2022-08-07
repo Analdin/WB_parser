@@ -10,8 +10,8 @@ namespace WB_parser.Variable
     {
         public static string category { get; set; } = "";
         public static string subCategory { get; set; } = "";
-        public static string priceChoose { get; set; }
-        public static string discountSet { get; set; }
+        public static string priceChoose { get; set; } = "";
+        public static string discountSet { get; set; } = "";
         public static string rowData { get; set; }
         public static string cardNumId { get; set; }
         public static bool isPersent { get; set; } = false;

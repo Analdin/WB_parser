@@ -253,7 +253,7 @@ namespace WB_parser.Parsing.AllPages
 
                             while (true)
                             {
-                                for (int i = 0; i < 3; i++)
+                                for (int i = 0; i < 8; i++)
                                 {
                                     Actions actions = new Actions(driver);
                                     actions.SendKeys(Keys.PageDown).Build().Perform();
@@ -281,6 +281,8 @@ namespace WB_parser.Parsing.AllPages
                                     try
                                     {
                                         VariablesForReport.tovName = elm.FindElement(By.XPath(".//p[contains(@class, 'goods-card__description')]/span|.//span[contains(@class, 'goods-name')]")).Text;
+                                        if (VariablesForReport.tovName.LastOrDefault(' ') == '\\')
+                                            VariablesForReport.tovName = VariablesForReport.tovName.Substring(0, VariablesForReport.tovName.Length - 1);
                                         ConsoleColors.DrawColor("DarkGray", $"Имя товара: {VariablesForReport.tovName}");
                                     }
                                     catch (NoSuchElementException ex)
